@@ -21,9 +21,13 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         header h1 { font-size: 20px; font-weight: 600; }
+
+        .header-actions { display: flex; gap: 8px; }
 
         .btn-primary {
             background: white;
@@ -37,11 +41,37 @@
         }
         .btn-primary:hover { background: #edebe9; }
 
+        .btn-ghost {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.6);
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.15); }
+
         .content {
             padding: 24px 32px;
-            max-width: 1400px;
+            max-width: 1500px;
             margin: 0 auto;
         }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .toolbar input, .toolbar select {
+            padding: 7px 10px;
+            border: 1px solid #c8c6c4;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .toolbar input { flex: 1; min-width: 200px; }
 
         /* ── Messages ── */
         .message {
@@ -122,9 +152,9 @@
             white-space: nowrap;
         }
 
-        .plant-vat  { background: #dce6f9; color: #1a56a0; }
-        .plant-vac  { background: #e8d5f5; color: #6b21a8; }
-        .plant-vam  { background: #d4f0e0; color: #0f6b35; }
+        .plant-vat    { background: #dce6f9; color: #1a56a0; }
+        .plant-vac    { background: #e8d5f5; color: #6b21a8; }
+        .plant-vam    { background: #d4f0e0; color: #0f6b35; }
         .plant-eldisy { background: #fde8d8; color: #9c4221; }
         .plant-other  { background: #f3f2f1; color: #323130; border: 1px solid #c8c6c4; }
 
@@ -133,18 +163,20 @@
         .status-done    { background: #d4f0e0; color: #107c10; }
         .status-other   { background: #f3f2f1; color: #323130; }
 
-        /* ── Delete button ── */
-        .btn-delete {
+        /* ── Row action buttons ── */
+        .row-actions { white-space: nowrap; text-align: right; }
+        .btn-icon {
             background: none;
             border: none;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 4px 7px;
             border-radius: 4px;
             font-size: 15px;
-            color: #c8c6c4;
+            color: #605e5c;
             transition: all 0.15s;
         }
-        .btn-delete:hover { background: #fde8d8; color: #d73b02; }
+        .btn-icon:hover { background: #edebe9; color: #323130; }
+        .btn-icon.delete:hover { background: #fde8d8; color: #d73b02; }
 
         /* ── Loading ── */
         .loading {
@@ -218,21 +250,11 @@
             box-shadow: 0 0 0 1px #6264a7;
         }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 72px;
-        }
+        .form-group textarea { resize: vertical; min-height: 72px; }
 
-        .required::after {
-            content: ' *';
-            color: #d73b02;
-        }
+        .required::after { content: ' *'; color: #d73b02; }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         .form-actions {
             display: flex;
@@ -267,7 +289,19 @@
         }
         .btn-cancel:hover { background: #f3f2f1; }
 
-        /* ── Responsive ── */
+        details.debug {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #605e5c;
+        }
+        details.debug pre {
+            background: #faf9f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+
         @media (max-width: 768px) {
             header { padding: 12px 16px; }
             .content { padding: 16px; }
@@ -281,25 +315,38 @@
 
 <header>
     <h1>📷 Camera System Projects</h1>
-    <button class="btn-primary" onclick="showAddModal()">+ Neues Element hinzufügen</button>
+    <div class="header-actions">
+        <button class="btn-ghost" onclick="refresh()">⟳ Aktualisieren</button>
+        <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
+    </div>
 </header>
 
 <div class="content">
+    <div class="toolbar">
+        <input type="text" id="search" placeholder="🔍 Suchen (Aufgabe, Projekt, Detail …)" oninput="applyFilter()">
+        <select id="filter-status" onchange="applyFilter()">
+            <option value="">Alle Status</option>
+            <option value="open">open</option>
+            <option value="Process">Process</option>
+            <option value="done">done</option>
+        </select>
+    </div>
+
     <div id="msg-area"></div>
     <div id="task-list">
         <div class="loading">⏳ &nbsp;Daten werden geladen…</div>
     </div>
 </div>
 
-<!-- Add Modal -->
+<!-- Add / Edit Modal -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
     <div class="modal">
-        <div class="modal-title">Neues Element hinzufügen</div>
+        <div class="modal-title" id="modal-title">Neues Element hinzufügen</div>
 
         <div class="form-row">
             <div class="form-group">
                 <label class="required">Project Name</label>
-                <input type="text" id="f-project" placeholder="z.B. Eldisy, 2300213 …">
+                <input type="text" id="f-project" placeholder="z.B. Eldisy, Multistation …">
             </div>
             <div class="form-group">
                 <label>Plant</label>
@@ -346,46 +393,57 @@
 
 <script>
 // ─────────────────────────────────────────────
-//  CONFIG  –  adjust if needed
+//  CONFIG  – from the .iqy export
 // ─────────────────────────────────────────────
 const SITE_URL  = 'https://vawuppertal.sharepoint.com/sites/ProductionTeamVAT';
-const LIST_NAME = 'Camera System Projects';
+const LIST_GUID = '2e096306-3190-4c68-b4fc-4ab9fcaa3b21';
+
+// Internal field names (adjust here if a column has a different internal name)
+const F = {
+    title:       'Title',        // Aufgabe
+    project:     'ProjectName',
+    plant:       'Plant',
+    detail:      'Detail',
+    endTime:     'EndTime',
+    status:      'Status',
+    responsible: 'Responsible'   // person column
+};
+
+const LIST_API = `${SITE_URL}/_api/web/lists(guid'${LIST_GUID}')`;
+
+let allItems   = [];   // cache
+let editingId  = null; // null = add mode
 
 // ─────────────────────────────────────────────
-//  SharePoint REST API helpers
+//  REST helpers
 // ─────────────────────────────────────────────
-
 async function spFetch(url, opts = {}) {
-    const res = await fetch(url, {
+    return fetch(url, {
         credentials: 'include',
         headers: { 'Accept': 'application/json;odata=verbose', ...opts.headers },
         ...opts
     });
-    return res;
 }
 
 async function getDigest() {
     const res = await spFetch(`${SITE_URL}/_api/contextinfo`, { method: 'POST' });
-    if (!res.ok) throw new Error('Anmeldung erforderlich. Bitte öffne diese Datei über SharePoint.');
+    if (!res.ok) throw new Error('Anmeldung erforderlich (HTTP ' + res.status + ').');
     const data = await res.json();
     return data.d.GetContextWebInformation.FormDigestValue;
 }
 
 async function getEntityType() {
-    const res = await spFetch(
-        `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')?$select=ListItemEntityTypeFullName`
-    );
+    const res = await spFetch(`${LIST_API}?$select=ListItemEntityTypeFullName`);
+    if (!res.ok) throw new Error('Liste nicht gefunden (HTTP ' + res.status + ').');
     const data = await res.json();
     return data.d.ListItemEntityTypeFullName;
 }
 
 async function loadItems() {
-    const url = `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')/items` +
-        `?$select=Id,Title,ProjectName,Plant,Detail,EndTime,Status,Responsible/Title,Responsible/EMail` +
-        `&$expand=Responsible` +
-        `&$orderby=ProjectName asc,Id asc` +
-        `&$top=500`;
-
+    const url = `${LIST_API}/items` +
+        `?$select=Id,${F.title},${F.project},${F.plant},${F.detail},${F.endTime},${F.status},${F.responsible}/Title,${F.responsible}/EMail` +
+        `&$expand=${F.responsible}` +
+        `&$top=2000`;
     const res = await spFetch(url);
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -395,52 +453,68 @@ async function loadItems() {
     return data.d.results;
 }
 
+async function ensureUserId(email, digest) {
+    if (!email) return null;
+    try {
+        const res = await spFetch(
+            `${SITE_URL}/_api/web/ensureuser`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;odata=verbose',
+                    'X-RequestDigest': digest
+                },
+                body: JSON.stringify({ logonName: email })
+            }
+        );
+        if (res.ok) { const d = await res.json(); return d.d.Id; }
+    } catch (_) {}
+    return null;
+}
+
+function buildBody(entityType, fields, userId) {
+    const body = { __metadata: { type: entityType } };
+    body[F.title]   = fields.title;
+    body[F.project] = fields.project;
+    body[F.plant]   = fields.plant   || null;
+    body[F.detail]  = fields.detail  || null;
+    body[F.status]  = fields.status  || null;
+    body[F.endTime] = fields.endTime ? new Date(fields.endTime).toISOString() : null;
+    if (userId !== null) body[F.responsible + 'Id'] = userId;
+    return body;
+}
+
 async function createItem(fields) {
     const [digest, entityType] = await Promise.all([getDigest(), getEntityType()]);
-
-    const body = {
-        __metadata: { type: entityType },
-        Title:       fields.title,
-        ProjectName: fields.project,
-        Plant:       fields.plant       || null,
-        Detail:      fields.detail      || null,
-        EndTime:     fields.endTime ? new Date(fields.endTime).toISOString() : null,
-        Status:      fields.status      || null
-    };
-
-    if (fields.responsible) {
-        try {
-            const uRes = await spFetch(
-                `${SITE_URL}/_api/web/ensureuser('${encodeURIComponent(fields.responsible)}')`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json;odata=verbose',
-                        'X-RequestDigest': digest
-                    },
-                    body: JSON.stringify({ __metadata: { type: 'SP.User' }, logonName: fields.responsible })
-                }
-            );
-            if (uRes.ok) {
-                const ud = await uRes.json();
-                body.ResponsibleId = ud.d.Id;
-            }
-        } catch (_) { /* continue without responsible */ }
-    }
-
-    const res = await spFetch(
-        `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')/items`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json;odata=verbose',
-                'X-RequestDigest': digest
-            },
-            body: JSON.stringify(body)
-        }
-    );
-
+    const userId = await ensureUserId(fields.responsible, digest);
+    const res = await spFetch(`${LIST_API}/items`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json;odata=verbose',
+            'X-RequestDigest': digest
+        },
+        body: JSON.stringify(buildBody(entityType, fields, userId))
+    });
     if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message?.value || `HTTP ${res.status}`);
+    }
+}
+
+async function updateItem(id, fields) {
+    const [digest, entityType] = await Promise.all([getDigest(), getEntityType()]);
+    const userId = await ensureUserId(fields.responsible, digest);
+    const res = await spFetch(`${LIST_API}/items(${id})`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json;odata=verbose',
+            'X-RequestDigest': digest,
+            'IF-MATCH': '*',
+            'X-HTTP-Method': 'MERGE'
+        },
+        body: JSON.stringify(buildBody(entityType, fields, userId))
+    });
+    if (!res.ok && res.status !== 204) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error?.message?.value || `HTTP ${res.status}`);
     }
@@ -448,31 +522,24 @@ async function createItem(fields) {
 
 async function removeItem(id) {
     const digest = await getDigest();
-    const res = await spFetch(
-        `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')/items(${id})`,
-        {
-            method: 'DELETE',
-            headers: {
-                'X-RequestDigest': digest,
-                'IF-MATCH': '*'
-            }
+    const res = await spFetch(`${LIST_API}/items(${id})`, {
+        method: 'POST',
+        headers: {
+            'X-RequestDigest': digest,
+            'IF-MATCH': '*',
+            'X-HTTP-Method': 'DELETE'
         }
-    );
-    if (!res.ok && res.status !== 204) {
-        throw new Error(`Löschen fehlgeschlagen (HTTP ${res.status})`);
-    }
+    });
+    if (!res.ok && res.status !== 204) throw new Error(`Löschen fehlgeschlagen (HTTP ${res.status})`);
 }
-
-function enc(s) { return encodeURIComponent(s); }
 
 // ─────────────────────────────────────────────
 //  UI helpers
 // ─────────────────────────────────────────────
-
 function showMsg(text, type = 'info') {
     const el = document.getElementById('msg-area');
     el.innerHTML = `<div class="message ${type}">${text}</div>`;
-    if (type !== 'error') setTimeout(() => el.innerHTML = '', 4000);
+    if (type !== 'error') setTimeout(() => { el.innerHTML = ''; }, 4000);
 }
 
 function plantClass(p) {
@@ -484,7 +551,6 @@ function plantClass(p) {
         default: return 'plant-other';
     }
 }
-
 function statusClass(s) {
     switch ((s || '').toLowerCase()) {
         case 'process': return 'status-process';
@@ -493,57 +559,51 @@ function statusClass(s) {
         default:        return 'status-other';
     }
 }
-
 function fmtDate(d) {
     if (!d) return '–';
-    return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: 'long' });
+    return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
 }
-
 function esc(s) {
-    return String(s || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    return String(s ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 // ─────────────────────────────────────────────
 //  Render
 // ─────────────────────────────────────────────
-
 function render(items) {
     const container = document.getElementById('task-list');
-
     if (!items.length) {
-        container.innerHTML = '<div class="loading">Keine Einträge vorhanden.</div>';
+        container.innerHTML = '<div class="loading">Keine Einträge gefunden.</div>';
         return;
     }
 
-    // Group by ProjectName
     const groups = new Map();
     items.forEach(item => {
-        const key = item.ProjectName || '(Kein Projekt)';
+        const key = item[F.project] || '(Kein Projekt)';
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(item);
     });
 
     let html = '';
     groups.forEach((tasks, project) => {
-        const rows = tasks.map(t => `
+        const rows = tasks.map(t => {
+            const resp = t[F.responsible];
+            return `
             <tr>
-                <td>${t.Plant ? `<span class="badge ${plantClass(t.Plant)}">${esc(t.Plant)}</span>` : '–'}</td>
-                <td class="task-name">${esc(t.Title) || '–'}</td>
-                <td style="max-width:260px;word-break:break-word">${esc(t.Detail) || '–'}</td>
-                <td style="white-space:nowrap">${fmtDate(t.EndTime)}</td>
-                <td>${esc(t.Responsible?.Title) || '–'}</td>
-                <td>${t.Status ? `<span class="badge ${statusClass(t.Status)}">${esc(t.Status)}</span>` : '–'}</td>
-                <td>
-                    <button class="btn-delete"
-                        onclick="confirmDelete(${t.Id}, '${esc(t.Title)}')"
-                        title="Löschen">🗑</button>
+                <td>${t[F.plant] ? `<span class="badge ${plantClass(t[F.plant])}">${esc(t[F.plant])}</span>` : '–'}</td>
+                <td class="task-name">${esc(t[F.title]) || '–'}</td>
+                <td style="max-width:280px;word-break:break-word">${esc(t[F.detail]) || '–'}</td>
+                <td style="white-space:nowrap">${fmtDate(t[F.endTime])}</td>
+                <td>${esc(resp?.Title) || '–'}</td>
+                <td>${t[F.status] ? `<span class="badge ${statusClass(t[F.status])}">${esc(t[F.status])}</span>` : '–'}</td>
+                <td class="row-actions">
+                    <button class="btn-icon" onclick="openModal(${t.Id})" title="Bearbeiten">✏️</button>
+                    <button class="btn-icon delete" onclick="confirmDelete(${t.Id})" title="Löschen">🗑</button>
                 </td>
-            </tr>`).join('');
+            </tr>`;
+        }).join('');
 
         html += `
         <div class="project-group">
@@ -553,23 +613,27 @@ function render(items) {
                 <span class="project-count">${tasks.length}</span>
             </div>
             <table>
-                <thead>
-                    <tr>
-                        <th>Plant</th>
-                        <th>Aufgabe</th>
-                        <th>Detail</th>
-                        <th>End Time</th>
-                        <th>Responsible</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th>Plant</th><th>Aufgabe</th><th>Detail</th>
+                    <th>End Time</th><th>Responsible</th><th>Status</th><th></th>
+                </tr></thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>`;
     });
-
     container.innerHTML = html;
+}
+
+function applyFilter() {
+    const q = document.getElementById('search').value.toLowerCase().trim();
+    const st = document.getElementById('filter-status').value.toLowerCase();
+    const filtered = allItems.filter(t => {
+        const matchQ = !q || [t[F.title], t[F.project], t[F.detail], t[F.plant], t[F.responsible]?.Title]
+            .some(v => String(v || '').toLowerCase().includes(q));
+        const matchS = !st || String(t[F.status] || '').toLowerCase() === st;
+        return matchQ && matchS;
+    });
+    render(filtered);
 }
 
 function toggleGroup(header) {
@@ -579,20 +643,39 @@ function toggleGroup(header) {
 }
 
 // ─────────────────────────────────────────────
-//  Modal
+//  Modal (add + edit)
 // ─────────────────────────────────────────────
+function openModal(id) {
+    editingId = id ?? null;
+    document.getElementById('modal-title').textContent =
+        editingId ? 'Element bearbeiten' : 'Neues Element hinzufügen';
 
-function showAddModal() {
+    if (editingId) {
+        const t = allItems.find(x => x.Id === editingId);
+        document.getElementById('f-project').value     = t[F.project] || '';
+        document.getElementById('f-plant').value       = t[F.plant] || '';
+        document.getElementById('f-title').value       = t[F.title] || '';
+        document.getElementById('f-detail').value      = t[F.detail] || '';
+        document.getElementById('f-endtime').value     = t[F.endTime] ? t[F.endTime].substring(0,10) : '';
+        document.getElementById('f-status').value      = t[F.status] || 'open';
+        document.getElementById('f-responsible').value = t[F.responsible]?.EMail || '';
+    } else {
+        clearForm();
+    }
     document.getElementById('modal').classList.add('show');
     document.getElementById('f-project').focus();
 }
 
+function clearForm() {
+    ['f-project','f-plant','f-title','f-detail','f-endtime','f-responsible']
+        .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-status').value = 'open';
+}
+
 function hideModal() {
     document.getElementById('modal').classList.remove('show');
-    ['f-project','f-plant','f-title','f-detail','f-endtime','f-responsible'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-    document.getElementById('f-status').value = 'open';
+    editingId = null;
+    clearForm();
 }
 
 function onOverlayClick(e) {
@@ -602,37 +685,40 @@ function onOverlayClick(e) {
 async function saveItem() {
     const title   = document.getElementById('f-title').value.trim();
     const project = document.getElementById('f-project').value.trim();
-
     if (!title)   { showMsg('Bitte Aufgabe ausfüllen.', 'error'); return; }
     if (!project) { showMsg('Bitte Project Name ausfüllen.', 'error'); return; }
 
-    const btn = document.getElementById('btn-save');
-    btn.disabled = true;
-    btn.textContent = 'Speichern…';
+    const fields = {
+        title, project,
+        plant:       document.getElementById('f-plant').value.trim(),
+        detail:      document.getElementById('f-detail').value.trim(),
+        endTime:     document.getElementById('f-endtime').value,
+        responsible: document.getElementById('f-responsible').value.trim(),
+        status:      document.getElementById('f-status').value
+    };
 
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true; btn.textContent = 'Speichern…';
     try {
-        await createItem({
-            title,
-            project,
-            plant:       document.getElementById('f-plant').value.trim(),
-            detail:      document.getElementById('f-detail').value.trim(),
-            endTime:     document.getElementById('f-endtime').value,
-            responsible: document.getElementById('f-responsible').value.trim(),
-            status:      document.getElementById('f-status').value
-        });
+        if (editingId) {
+            await updateItem(editingId, fields);
+            showMsg('✔ Element aktualisiert.', 'success');
+        } else {
+            await createItem(fields);
+            showMsg('✔ Element hinzugefügt.', 'success');
+        }
         hideModal();
-        showMsg('✔ Element erfolgreich hinzugefügt.', 'success');
         await refresh();
     } catch (e) {
         showMsg('Fehler: ' + e.message, 'error');
     } finally {
-        btn.disabled = false;
-        btn.textContent = 'Speichern';
+        btn.disabled = false; btn.textContent = 'Speichern';
     }
 }
 
-async function confirmDelete(id, title) {
-    if (!confirm(`„${title}" wirklich löschen?`)) return;
+async function confirmDelete(id) {
+    const t = allItems.find(x => x.Id === id);
+    if (!confirm(`„${t?.[F.title] || 'Element'}" wirklich löschen?`)) return;
     try {
         await removeItem(id);
         showMsg('Element gelöscht.', 'success');
@@ -645,29 +731,37 @@ async function confirmDelete(id, title) {
 // ─────────────────────────────────────────────
 //  Init
 // ─────────────────────────────────────────────
-
 async function refresh() {
     try {
-        const items = await loadItems();
-        render(items);
+        allItems = await loadItems();
+        applyFilter();
     } catch (e) {
         document.getElementById('task-list').innerHTML = `
             <div class="message error">
-                ⚠️ <strong>Fehler:</strong> ${e.message}<br><br>
-                Diese Datei muss von SharePoint geöffnet werden:<br>
-                <ol style="margin:8px 0 0 20px;line-height:1.8">
-                    <li>Lade die Datei in eine SharePoint-Dokumentbibliothek hoch</li>
-                    <li>Öffne sie direkt von SharePoint (nicht von der lokalen Festplatte)</li>
-                </ol>
-            </div>`;
+                ⚠️ <strong>Fehler:</strong> ${esc(e.message)}
+            </div>
+            <details class="debug" open>
+                <summary>Diagnose / Hilfe</summary>
+                <pre>Diese Datei muss als echte SharePoint-Seite laufen
+(URL beginnt mit https://vawuppertal.sharepoint.com).
+
+Wenn der Fehler "Failed to fetch" lautet:
+  → Die Datei läuft in einer Sandbox (Teams-Vorschau).
+  → Öffne die direkte Datei-URL im Browser-Tab.
+
+Wenn der Fehler ein Feldname ist (z.B. "ProjectName"):
+  → Der interne Spaltenname stimmt nicht.
+  → Sende mir die Fehlermeldung, ich passe die F = {...}
+    Zuordnung im Code an.
+
+Site:  ${SITE_URL}
+List:  ${LIST_GUID}</pre>
+            </details>`;
     }
 }
 
 refresh();
-
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') hideModal();
-});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideModal(); });
 </script>
 
 </body>
