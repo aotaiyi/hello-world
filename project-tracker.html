@@ -609,13 +609,13 @@ function isoWeek(date) {
 }
 
 function renderGantt() {
-    const WEEKS = 20;
+    const WEEKS = 52;                                // a full year of calendar weeks
     const today = new Date(); today.setHours(0,0,0,0);
     const todayMonday = mondayOf(today);
 
-    // Start 2 weeks before current week so "today" is visible near the left
+    // Start 4 weeks before current week so recent past is visible; scroll right for the future
     const startMonday = new Date(todayMonday);
-    startMonday.setDate(startMonday.getDate() - 2 * 7);
+    startMonday.setDate(startMonday.getDate() - 4 * 7);
 
     // Build week buckets
     const weeks = [];
