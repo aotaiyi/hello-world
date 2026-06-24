@@ -132,16 +132,18 @@
     #gantt-close:hover { background: rgba(255,255,255,0.15); }
 
     #gantt-body { flex: 1; overflow: auto; padding: 24px 28px; }
-    .gantt-table { width: 100%; border-collapse: collapse; background: white;
-        border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    .gantt-table th { background: #faf9f8; padding: 9px 12px; font-size: 12px; font-weight: 600;
-        color: #605e5c; border-bottom: 2px solid #edebe9; white-space: nowrap; text-align: center; }
-    .gantt-table th.col-info { text-align: left; min-width: 220px; }
-    .gantt-table td { padding: 7px 12px; border-bottom: 1px solid #f3f2f1; font-size: 13px; vertical-align: middle; }
-    .gantt-table td.col-info { min-width: 220px; max-width: 280px; }
-    .gantt-table td.day-cell { min-width: 28px; width: 28px; padding: 4px 2px; }
+    .gantt-table { width: 100%; min-width: 900px; border-collapse: collapse; background: white;
+        border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); table-layout: fixed; }
+    .gantt-table th { background: #faf9f8; padding: 9px 6px; font-size: 12px; font-weight: 600;
+        color: #605e5c; border-bottom: 2px solid #edebe9; border-right: 1px solid #edebe9;
+        white-space: nowrap; text-align: center; }
+    .gantt-table th.col-info { text-align: left; width: 260px; padding: 9px 14px; vertical-align: middle; }
+    .gantt-table td { padding: 8px 6px; border-bottom: 1px solid #f3f2f1; border-right: 1px solid #f3f2f1;
+        font-size: 13px; vertical-align: middle; }
+    .gantt-table td.col-info { width: 260px; padding: 8px 14px; word-break: break-word; }
+    .gantt-table td.week-cell { text-align: center; }
     .gantt-table tr:last-child td { border-bottom: none; }
-    .gantt-table tr:hover td { background: #faf9f8; }
+    .gantt-table tbody tr:hover td { background: #faf9f8; }
     .gantt-project-row td { background: #f0eff9; font-weight: 700; font-size: 13px;
         border-left: 4px solid #6264a7; }
     .gantt-project-row:hover td { background: #e8e7f5 !important; }
@@ -582,42 +584,66 @@ function ganttBarClass(status) {
     return 'status-other';
 }
 
-function renderGantt() {
-    const DAYS = 42; // 6 weeks displayed
-    const today = new Date(); today.setHours(0,0,0,0);
-    const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() + ganttOffset * 7 - 7); // start 1 week before focus
+// ISO-8601 calendar week number + the Monday of that week
+function mondayOf(date) {
+    const d = new Date(date); d.setHours(0,0,0,0);
+    const day = (d.getDay() + 6) % 7;   // Mon=0 … Sun=6
+    d.setDate(d.getDate() - day);
+    return d;
+}
+function isoWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - day + 3);          // Thursday of this week
+    const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    const fday = (firstThursday.getUTCDay() + 6) % 7;
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - fday + 3);
+    return 1 + Math.round((d - firstThursday) / (7 * 86400000));
+}
 
-    // Build header dates
-    const dates = [];
-    for (let i = 0; i < DAYS; i++) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() + i);
-        dates.push(d);
+function renderGantt() {
+    const WEEKS = 14;                                // number of calendar weeks shown
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayMonday = mondayOf(today);
+
+    // First Monday shown: 2 weeks before today's week, shifted by navigation offset
+    const startMonday = new Date(todayMonday);
+    startMonday.setDate(startMonday.getDate() + (ganttOffset - 2) * 7);
+
+    // Build week buckets
+    const weeks = [];
+    for (let i = 0; i < WEEKS; i++) {
+        const mon = new Date(startMonday);
+        mon.setDate(mon.getDate() + i * 7);
+        const sun = new Date(mon);
+        sun.setDate(sun.getDate() + 6);
+        weeks.push({ mon, sun, cw: isoWeek(mon) });
     }
 
-    // Label row: month labels spanning days
-    let monthSpans = [];
+    // Month header: span the weeks that fall in the same month (by the week's Monday)
+    const monthSpans = [];
     let cur = null, count = 0;
-    dates.forEach(d => {
-        const lbl = d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' });
-        if (lbl === cur) { count++; }
+    weeks.forEach(w => {
+        const lbl = w.mon.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+        if (lbl === cur) count++;
         else { if (cur) monthSpans.push({ lbl: cur, span: count }); cur = lbl; count = 1; }
     });
     monthSpans.push({ lbl: cur, span: count });
 
     const monthHeaderCells = monthSpans.map(m =>
-        `<th colspan="${m.span}" style="border-right:1px solid #edebe9;background:#6264a7;color:white">${m.lbl}</th>`
+        `<th colspan="${m.span}" style="background:#6264a7;color:white;border-right:2px solid #fff">${m.lbl}</th>`
     ).join('');
 
-    const dayHeaderCells = dates.map(d => {
-        const isToday = d.getTime() === today.getTime();
-        const isWE = d.getDay() === 0 || d.getDay() === 6;
-        const cls = isToday ? 'today-line' : (isWE ? 'weekend-cell' : '');
-        return `<th class="${cls}" style="font-size:11px;padding:4px 2px;min-width:28px">${d.getDate()}</th>`;
+    const todayCW = isoWeek(today), todayYr = today.getFullYear();
+    const cwHeaderCells = weeks.map(w => {
+        const isThisWeek = w.cw === todayCW && w.mon.getFullYear() === todayYr;
+        const dateRange = `${w.mon.getDate()}.${w.mon.getMonth()+1}.`;
+        return `<th class="${isThisWeek ? 'today-line' : ''}" style="font-size:11px;padding:5px 2px">
+            <div style="font-weight:700">CW ${w.cw}</div>
+            <div style="font-size:9px;font-weight:400;opacity:.7;margin-top:1px">${dateRange}</div></th>`;
     }).join('');
 
-    // Group items
+    // Group items by project
     const groups = new Map();
     items.forEach(t => {
         const k = t.project || '(Kein Projekt)';
@@ -625,10 +651,13 @@ function renderGantt() {
         groups.get(k).push(t);
     });
 
+    const rangeStart = weeks[0].mon.getTime();
+    const rangeEnd   = weeks[WEEKS-1].sun.getTime();
+
     let bodyRows = '';
     groups.forEach((tasks, project) => {
         bodyRows += `<tr class="gantt-project-row">
-            <td colspan="${DAYS + 1}">${esc(project)}
+            <td colspan="${WEEKS + 1}">${esc(project)}
                 <span style="background:#6264a7;color:white;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:400;margin-left:6px">${tasks.length}</span>
             </td></tr>`;
 
@@ -637,53 +666,56 @@ function renderGantt() {
             const endDate = hasEnd ? new Date(t.endTime) : null;
             if (endDate) endDate.setHours(0,0,0,0);
 
-            // Bar: for tasks with endTime, show bar from max(startDate, today-14) to endDate
-            // For tasks without endTime, no bar
-            let barStartIdx = -1, barEndIdx = -1;
-            if (endDate) {
-                // Assume task starts today or earlier (no start field), show bar covering remaining days
-                const barStart = today < startDate ? startDate : today;
-                barStartIdx = Math.round((barStart - startDate) / 86400000);
-                barEndIdx   = Math.round((endDate   - startDate) / 86400000);
-                barStartIdx = Math.max(0, Math.min(barStartIdx, DAYS - 1));
-                barEndIdx   = Math.max(-1, Math.min(barEndIdx,   DAYS - 1));
+            // Bar spans from "today" (or range start if today is earlier) to the end date
+            let firstWeek = -1, lastWeek = -1;
+            if (endDate && endDate.getTime() >= rangeStart && (today.getTime() <= rangeEnd)) {
+                const barStart = today.getTime() < rangeStart ? new Date(rangeStart) : today;
+                weeks.forEach((w, i) => {
+                    const ws = w.mon.getTime(), we = w.sun.getTime();
+                    if (barStart.getTime() <= we && endDate.getTime() >= ws) {
+                        if (firstWeek === -1) firstWeek = i;
+                        lastWeek = i;
+                    }
+                });
             }
 
-            const dayCells = dates.map((d, i) => {
-                const isToday = d.getTime() === today.getTime();
-                const isWE = d.getDay() === 0 || d.getDay() === 6;
-                let bg = isToday ? 'background:#fde8d8' : (isWE ? 'background:#f9f8f7' : '');
-
-                if (barStartIdx >= 0 && barEndIdx >= barStartIdx && i >= barStartIdx && i <= barEndIdx) {
-                    const isFirst = i === barStartIdx;
-                    const isLast  = i === barEndIdx;
-                    const barStyle = `background:${isToday?'#fde8d8':''}`;
-                    const radius = `border-radius:${isFirst?'3px':'0'} ${isLast?'3px':'0'} ${isLast?'3px':'0'} ${isFirst?'3px':'0'}`;
-                    const barCls = ganttBarClass(t.status);
-                    return `<td class="day-cell" style="${bg}">
-                        <div class="gantt-bar ${barCls}" style="position:relative;height:14px;width:100%;${radius}"
-                             data-tip="${esc(t.title)} — ${esc(t.endTime)}"></div></td>`;
+            const barCls = ganttBarClass(t.status);
+            const tip = `${esc(t.title)}${t.endTime ? ' — ' + esc(t.endTime) : ''}`;
+            const weekCells = weeks.map((w, i) => {
+                const isThisWeek = w.cw === todayCW && w.mon.getFullYear() === todayYr;
+                const bg = isThisWeek ? 'background:#fde8d8' : '';
+                if (firstWeek >= 0 && i >= firstWeek && i <= lastWeek) {
+                    const isFirst = i === firstWeek, isLast = i === lastWeek;
+                    const radius = `border-radius:${isFirst?'4px':'0'} ${isLast?'4px':'0'} ${isLast?'4px':'0'} ${isFirst?'4px':'0'}`;
+                    return `<td class="week-cell" style="${bg};padding:0">
+                        <div class="gantt-bar ${barCls}" title="${tip}"
+                             style="position:relative;height:18px;width:100%;${radius}"></div></td>`;
                 }
-                return `<td class="day-cell" style="${bg}"></td>`;
+                return `<td class="week-cell" style="${bg}"></td>`;
             }).join('');
 
             const statusBadge = t.status
                 ? `<span class="badge ${statusClass(t.status)}" style="font-size:11px;padding:1px 7px">${esc(t.status)}</span>` : '';
+            const endLbl = t.endTime ? fmtDate(t.endTime) : '–';
             bodyRows += `<tr>
-                <td class="col-info" style="max-width:260px;overflow:hidden;word-break:break-word">
-                    <div style="font-size:13px;font-weight:500">${esc(t.title)}</div>
-                    <div style="font-size:11px;color:#605e5c;margin-top:2px">${statusBadge}
-                        ${t.responsible ? `<span style="margin-left:4px">${esc(t.responsible)}</span>` : ''}
+                <td class="col-info">
+                    <div style="font-size:13px;font-weight:500;line-height:1.3">${esc(t.title)}</div>
+                    <div style="font-size:11px;color:#605e5c;margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                        ${statusBadge}
+                        ${t.responsible ? `<span>${esc(t.responsible)}</span>` : ''}
+                        ${t.endTime ? `<span style="color:#8a8886">🏁 ${endLbl}</span>` : ''}
                     </div>
-                </td>${dayCells}</tr>`;
+                </td>${weekCells}</tr>`;
         });
     });
 
-    // Range label
-    const startLbl = startDate.toLocaleDateString('de-DE', { day:'2-digit', month:'short' });
-    const endD = new Date(startDate); endD.setDate(endD.getDate() + DAYS - 1);
-    const endLbl = endD.toLocaleDateString('de-DE', { day:'2-digit', month:'short', year:'numeric' });
-    document.getElementById('gantt-range').textContent = `${startLbl} – ${endLbl}`;
+    // Range label in header
+    const sLbl = weeks[0].mon.toLocaleDateString('de-DE', { day:'2-digit', month:'short' });
+    const eLbl = weeks[WEEKS-1].sun.toLocaleDateString('de-DE', { day:'2-digit', month:'short', year:'numeric' });
+    document.getElementById('gantt-range').textContent = `CW ${weeks[0].cw} – CW ${weeks[WEEKS-1].cw}  (${sLbl} – ${eLbl})`;
+
+    const colWidth = 100 / (WEEKS + 4); // info column ≈ 4 week-columns wide
+    const cols = `<col style="width:260px">` + weeks.map(()=>`<col>`).join('');
 
     document.getElementById('gantt-content').innerHTML = `
     <div class="gantt-legend">
@@ -692,12 +724,13 @@ function renderGantt() {
         <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#f0a070"></span>open</span>
         <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#55a86a"></span>done</span>
         <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#d73b02"></span>Urgent</span>
-        <span style="margin-left:8px;font-size:12px;color:#605e5c">Balken = heute bis Endtermin</span>
+        <span style="margin-left:8px;font-size:12px;color:#605e5c">Balken = heute → Endtermin · orange Spalte = aktuelle KW</span>
     </div>
     <table class="gantt-table">
+        <colgroup>${cols}</colgroup>
         <thead>
             <tr><th class="col-info" rowspan="2">Aufgabe</th>${monthHeaderCells}</tr>
-            <tr>${dayHeaderCells}</tr>
+            <tr>${cwHeaderCells}</tr>
         </thead>
         <tbody>${bodyRows}</tbody>
     </table>`;
