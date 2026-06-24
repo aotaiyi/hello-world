@@ -50,18 +50,22 @@
     .chevron { font-size: 10px; color: #605e5c; transition: transform 0.2s; }
     .collapsed .chevron { transform: rotate(-90deg); }
 
-    table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
+    table { width: 100%; border-collapse: collapse; background: white; table-layout: auto; }
     col.col-plant       { width: 70px; }
-    col.col-aufgabe     { width: 210px; }
-    col.col-detail      { width: auto; }
+    col.col-aufgabe     { width: auto; }
+    col.col-detail      { width: 40%; }
     col.col-endtime     { width: 130px; }
     col.col-responsible { width: 130px; }
     col.col-status      { width: 80px; }
     col.col-actions     { width: 76px; }
     th { background: #faf9f8; padding: 10px 14px; text-align: left; font-size: 12px;
-        font-weight: 600; color: #605e5c; border-bottom: 1px solid #edebe9; overflow: hidden; }
-    td { padding: 10px 14px; border-bottom: 1px solid #edebe9; font-size: 13px; vertical-align: middle;
-        overflow: hidden; }
+        font-weight: 600; color: #605e5c; border-bottom: 1px solid #edebe9; }
+    th.col-plant, td.col-plant     { width: 70px; }
+    th.col-endtime, td.col-endtime { width: 130px; white-space: nowrap; }
+    th.col-resp, td.col-resp       { width: 130px; }
+    th.col-status, td.col-status   { width: 80px; }
+    th.col-act, td.col-act         { width: 76px; }
+    td { padding: 10px 14px; border-bottom: 1px solid #edebe9; font-size: 13px; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #faf9f8; }
     .task-name { font-weight: 500; }
@@ -324,12 +328,11 @@ function render() {
                 <span class="project-count">${tasks.length}</span>
             </div>
             <table>
-                <colgroup>
-                    <col class="col-plant"><col class="col-aufgabe"><col class="col-detail">
-                    <col class="col-endtime"><col class="col-responsible"><col class="col-status"><col class="col-actions">
-                </colgroup>
-                <thead><tr><th>Plant</th><th>Aufgabe</th><th>Detail</th>
-                    <th>End Time</th><th>Responsible</th><th>Status</th><th></th></tr></thead>
+                <thead><tr>
+                    <th class="col-plant">Plant</th><th>Aufgabe</th><th>Detail</th>
+                    <th class="col-endtime">End Time</th><th class="col-resp">Responsible</th>
+                    <th class="col-status">Status</th><th class="col-act"></th>
+                </tr></thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>`;
