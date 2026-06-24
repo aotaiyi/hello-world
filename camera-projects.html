@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera System Projects</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #f3f2f1;
+            color: #323130;
+        }
+
+        header {
+            background: #6264a7;
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        header h1 { font-size: 20px; font-weight: 600; }
+
+        .btn-primary {
+            background: white;
+            color: #6264a7;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-primary:hover { background: #edebe9; }
+
+        .content {
+            padding: 24px 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ── Messages ── */
+        .message {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .message.error   { background: #fde8d8; color: #9c4221; border-left: 4px solid #d73b02; }
+        .message.success { background: #d4f0e0; color: #0f6b35; border-left: 4px solid #107c10; }
+        .message.info    { background: #dce6f9; color: #1a56a0; border-left: 4px solid #1a56a0; }
+
+        /* ── Project Groups ── */
+        .project-group { margin-bottom: 20px; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+        .project-header {
+            background: white;
+            padding: 12px 16px;
+            border-left: 4px solid #6264a7;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .project-header:hover { background: #f3f2f1; }
+
+        .project-count {
+            background: #6264a7;
+            color: white;
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-size: 12px;
+            font-weight: 400;
+        }
+
+        .chevron { font-size: 10px; color: #605e5c; transition: transform 0.2s; }
+        .collapsed .chevron { transform: rotate(-90deg); }
+
+        /* ── Table ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #faf9f8;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #605e5c;
+            border-bottom: 1px solid #edebe9;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #edebe9;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #faf9f8; }
+
+        .task-name { font-weight: 500; color: #323130; }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .plant-vat  { background: #dce6f9; color: #1a56a0; }
+        .plant-vac  { background: #e8d5f5; color: #6b21a8; }
+        .plant-vam  { background: #d4f0e0; color: #0f6b35; }
+        .plant-eldisy { background: #fde8d8; color: #9c4221; }
+        .plant-other  { background: #f3f2f1; color: #323130; border: 1px solid #c8c6c4; }
+
+        .status-process { background: #dce6f9; color: #1a56a0; }
+        .status-open    { background: #fde8d8; color: #d73b02; }
+        .status-done    { background: #d4f0e0; color: #107c10; }
+        .status-other   { background: #f3f2f1; color: #323130; }
+
+        /* ── Delete button ── */
+        .btn-delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 15px;
+            color: #c8c6c4;
+            transition: all 0.15s;
+        }
+        .btn-delete:hover { background: #fde8d8; color: #d73b02; }
+
+        /* ── Loading ── */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #605e5c;
+            font-size: 14px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            padding: 32px;
+            width: 520px;
+            max-width: 95vw;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #323130;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #605e5c;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #c8c6c4;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #323130;
+            background: white;
+            transition: border-color 0.15s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #6264a7;
+            box-shadow: 0 0 0 1px #6264a7;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 72px;
+        }
+
+        .required::after {
+            content: ' *';
+            color: #d73b02;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 24px;
+            border-top: 1px solid #edebe9;
+            padding-top: 20px;
+        }
+
+        .btn-save {
+            background: #6264a7;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-save:hover:not(:disabled) { background: #585a96; }
+        .btn-save:disabled { background: #c8c6c4; cursor: not-allowed; }
+
+        .btn-cancel {
+            background: white;
+            color: #323130;
+            border: 1px solid #c8c6c4;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-cancel:hover { background: #f3f2f1; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            header { padding: 12px 16px; }
+            .content { padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            th:nth-child(3), td:nth-child(3),
+            th:nth-child(4), td:nth-child(4) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>📷 Camera System Projects</h1>
+    <button class="btn-primary" onclick="showAddModal()">+ Neues Element hinzufügen</button>
+</header>
+
+<div class="content">
+    <div id="msg-area"></div>
+    <div id="task-list">
+        <div class="loading">⏳ &nbsp;Daten werden geladen…</div>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
+    <div class="modal">
+        <div class="modal-title">Neues Element hinzufügen</div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="required">Project Name</label>
+                <input type="text" id="f-project" placeholder="z.B. Eldisy, 2300213 …">
+            </div>
+            <div class="form-group">
+                <label>Plant</label>
+                <input type="text" id="f-plant" placeholder="VAT / VAC / VAM …">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="required">Aufgabe</label>
+            <input type="text" id="f-title" placeholder="Aufgabenbeschreibung">
+        </div>
+
+        <div class="form-group">
+            <label>Detail</label>
+            <textarea id="f-detail" placeholder="Weitere Details …"></textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>End Time</label>
+                <input type="date" id="f-endtime">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="f-status">
+                    <option value="open">open</option>
+                    <option value="Process">Process</option>
+                    <option value="done">done</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Responsible (E-Mail)</label>
+            <input type="email" id="f-responsible" placeholder="name@vorwerk-automotive.de">
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-cancel" onclick="hideModal()">Abbrechen</button>
+            <button class="btn-save" id="btn-save" onclick="saveItem()">Speichern</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG  –  adjust if needed
+// ─────────────────────────────────────────────
+const SITE_URL  = 'https://vawuppertal.sharepoint.com/sites/ProductionTeamVAT';
+const LIST_NAME = 'Camera System Projects';
+
+// ─────────────────────────────────────────────
+//  SharePoint REST API helpers
+// ─────────────────────────────────────────────
+
+async function spFetch(url, opts = {}) {
+    const res = await fetch(url, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json;odata=verbose', ...opts.headers },
+        ...opts
+    });
+    return res;
+}
+
+async function getDigest() {
+    const res = await spFetch(`${SITE_URL}/_api/contextinfo`, { method: 'POST' });
+    if (!res.ok) throw new Error('Anmeldung erforderlich. Bitte öffne diese Datei über SharePoint.');
+    const data = await res.json();
+    return data.d.GetContextWebInformation.FormDigestValue;
+}
+
+async function getEntityType() {
+    const res = await spFetch(
+        `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')?$select=ListItemEntityTypeFullName`
+    );
+    const data = await res.json();
+    return data.d.ListItemEntityTypeFullName;
+}
+
+async function loadItems() {
+    const url = `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')/items` +
+        `?$select=Id,Title,ProjectName,Plant,Detail,EndTime,Status,Responsible/Title,Responsible/EMail` +
+        `&$expand=Responsible` +
+        `&$orderby=ProjectName asc,Id asc` +
+        `&$top=500`;
+
+    const res = await spFetch(url);
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message?.value || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    return data.d.results;
+}
+
+async function createItem(fields) {
+    const [digest, entityType] = await Promise.all([getDigest(), getEntityType()]);
+
+    const body = {
+        __metadata: { type: entityType },
+        Title:       fields.title,
+        ProjectName: fields.project,
+        Plant:       fields.plant       || null,
+        Detail:      fields.detail      || null,
+        EndTime:     fields.endTime ? new Date(fields.endTime).toISOString() : null,
+        Status:      fields.status      || null
+    };
+
+    if (fields.responsible) {
+        try {
+            const uRes = await spFetch(
+                `${SITE_URL}/_api/web/ensureuser('${encodeURIComponent(fields.responsible)}')`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json;odata=verbose',
+                        'X-RequestDigest': digest
+                    },
+                    body: JSON.stringify({ __metadata: { type: 'SP.User' }, logonName: fields.responsible })
+                }
+            );
+            if (uRes.ok) {
+                const ud = await uRes.json();
+                body.ResponsibleId = ud.d.Id;
+            }
+        } catch (_) { /* continue without responsible */ }
+    }
+
+    const res = await spFetch(
+        `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')/items`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;odata=verbose',
+                'X-RequestDigest': digest
+            },
+            body: JSON.stringify(body)
+        }
+    );
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message?.value || `HTTP ${res.status}`);
+    }
+}
+
+async function removeItem(id) {
+    const digest = await getDigest();
+    const res = await spFetch(
+        `${SITE_URL}/_api/web/lists/getbytitle('${enc(LIST_NAME)}')/items(${id})`,
+        {
+            method: 'DELETE',
+            headers: {
+                'X-RequestDigest': digest,
+                'IF-MATCH': '*'
+            }
+        }
+    );
+    if (!res.ok && res.status !== 204) {
+        throw new Error(`Löschen fehlgeschlagen (HTTP ${res.status})`);
+    }
+}
+
+function enc(s) { return encodeURIComponent(s); }
+
+// ─────────────────────────────────────────────
+//  UI helpers
+// ─────────────────────────────────────────────
+
+function showMsg(text, type = 'info') {
+    const el = document.getElementById('msg-area');
+    el.innerHTML = `<div class="message ${type}">${text}</div>`;
+    if (type !== 'error') setTimeout(() => el.innerHTML = '', 4000);
+}
+
+function plantClass(p) {
+    switch ((p || '').toLowerCase()) {
+        case 'vat': return 'plant-vat';
+        case 'vac': return 'plant-vac';
+        case 'vam': return 'plant-vam';
+        case 'eldisy': return 'plant-eldisy';
+        default: return 'plant-other';
+    }
+}
+
+function statusClass(s) {
+    switch ((s || '').toLowerCase()) {
+        case 'process': return 'status-process';
+        case 'open':    return 'status-open';
+        case 'done':    return 'status-done';
+        default:        return 'status-other';
+    }
+}
+
+function fmtDate(d) {
+    if (!d) return '–';
+    return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: 'long' });
+}
+
+function esc(s) {
+    return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ─────────────────────────────────────────────
+//  Render
+// ─────────────────────────────────────────────
+
+function render(items) {
+    const container = document.getElementById('task-list');
+
+    if (!items.length) {
+        container.innerHTML = '<div class="loading">Keine Einträge vorhanden.</div>';
+        return;
+    }
+
+    // Group by ProjectName
+    const groups = new Map();
+    items.forEach(item => {
+        const key = item.ProjectName || '(Kein Projekt)';
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+    });
+
+    let html = '';
+    groups.forEach((tasks, project) => {
+        const rows = tasks.map(t => `
+            <tr>
+                <td>${t.Plant ? `<span class="badge ${plantClass(t.Plant)}">${esc(t.Plant)}</span>` : '–'}</td>
+                <td class="task-name">${esc(t.Title) || '–'}</td>
+                <td style="max-width:260px;word-break:break-word">${esc(t.Detail) || '–'}</td>
+                <td style="white-space:nowrap">${fmtDate(t.EndTime)}</td>
+                <td>${esc(t.Responsible?.Title) || '–'}</td>
+                <td>${t.Status ? `<span class="badge ${statusClass(t.Status)}">${esc(t.Status)}</span>` : '–'}</td>
+                <td>
+                    <button class="btn-delete"
+                        onclick="confirmDelete(${t.Id}, '${esc(t.Title)}')"
+                        title="Löschen">🗑</button>
+                </td>
+            </tr>`).join('');
+
+        html += `
+        <div class="project-group">
+            <div class="project-header" onclick="toggleGroup(this)">
+                <span class="chevron">▼</span>
+                <span>${esc(project)}</span>
+                <span class="project-count">${tasks.length}</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Plant</th>
+                        <th>Aufgabe</th>
+                        <th>Detail</th>
+                        <th>End Time</th>
+                        <th>Responsible</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function toggleGroup(header) {
+    const table = header.nextElementSibling;
+    header.classList.toggle('collapsed');
+    table.style.display = header.classList.contains('collapsed') ? 'none' : '';
+}
+
+// ─────────────────────────────────────────────
+//  Modal
+// ─────────────────────────────────────────────
+
+function showAddModal() {
+    document.getElementById('modal').classList.add('show');
+    document.getElementById('f-project').focus();
+}
+
+function hideModal() {
+    document.getElementById('modal').classList.remove('show');
+    ['f-project','f-plant','f-title','f-detail','f-endtime','f-responsible'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('f-status').value = 'open';
+}
+
+function onOverlayClick(e) {
+    if (e.target === document.getElementById('modal')) hideModal();
+}
+
+async function saveItem() {
+    const title   = document.getElementById('f-title').value.trim();
+    const project = document.getElementById('f-project').value.trim();
+
+    if (!title)   { showMsg('Bitte Aufgabe ausfüllen.', 'error'); return; }
+    if (!project) { showMsg('Bitte Project Name ausfüllen.', 'error'); return; }
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true;
+    btn.textContent = 'Speichern…';
+
+    try {
+        await createItem({
+            title,
+            project,
+            plant:       document.getElementById('f-plant').value.trim(),
+            detail:      document.getElementById('f-detail').value.trim(),
+            endTime:     document.getElementById('f-endtime').value,
+            responsible: document.getElementById('f-responsible').value.trim(),
+            status:      document.getElementById('f-status').value
+        });
+        hideModal();
+        showMsg('✔ Element erfolgreich hinzugefügt.', 'success');
+        await refresh();
+    } catch (e) {
+        showMsg('Fehler: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Speichern';
+    }
+}
+
+async function confirmDelete(id, title) {
+    if (!confirm(`„${title}" wirklich löschen?`)) return;
+    try {
+        await removeItem(id);
+        showMsg('Element gelöscht.', 'success');
+        await refresh();
+    } catch (e) {
+        showMsg('Fehler: ' + e.message, 'error');
+    }
+}
+
+// ─────────────────────────────────────────────
+//  Init
+// ─────────────────────────────────────────────
+
+async function refresh() {
+    try {
+        const items = await loadItems();
+        render(items);
+    } catch (e) {
+        document.getElementById('task-list').innerHTML = `
+            <div class="message error">
+                ⚠️ <strong>Fehler:</strong> ${e.message}<br><br>
+                Diese Datei muss von SharePoint geöffnet werden:<br>
+                <ol style="margin:8px 0 0 20px;line-height:1.8">
+                    <li>Lade die Datei in eine SharePoint-Dokumentbibliothek hoch</li>
+                    <li>Öffne sie direkt von SharePoint (nicht von der lokalen Festplatte)</li>
+                </ol>
+            </div>`;
+    }
+}
+
+refresh();
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') hideModal();
+});
+</script>
+
+</body>
+</html>
