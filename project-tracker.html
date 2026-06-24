@@ -28,6 +28,9 @@
     .toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
     .toolbar input, .toolbar select { padding: 7px 10px; border: 1px solid #c8c6c4; border-radius: 4px; font-size: 14px; }
     .toolbar input.search { flex: 1; min-width: 200px; }
+    .toolbar label.hide-done { display: flex; align-items: center; gap: 6px; font-size: 14px;
+        color: #323130; cursor: pointer; user-select: none; white-space: nowrap; }
+    .toolbar label.hide-done input { cursor: pointer; }
 
     .stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
     .stat-card { background: white; border-radius: 6px; padding: 12px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -130,6 +133,7 @@
         <input type="text" class="search" id="search" placeholder="🔍 Suchen …" oninput="render()">
         <select id="filter-project" onchange="render()"><option value="">Alle Projekte</option></select>
         <select id="filter-status" onchange="render()"><option value="">Alle Status</option></select>
+        <label class="hide-done"><input type="checkbox" id="hide-done" onchange="render()"> „done" ausblenden</label>
     </div>
 
     <div id="msg-area"></div>
@@ -281,13 +285,15 @@ function render() {
     const q  = document.getElementById('search').value.toLowerCase().trim();
     const fp = document.getElementById('filter-project').value;
     const fs = document.getElementById('filter-status').value.toLowerCase();
+    const hideDone = document.getElementById('hide-done').checked;
 
     const filtered = items.filter(t => {
         const mq = !q || [t.title,t.project,t.detail,t.plant,t.responsible]
             .some(v => String(v||'').toLowerCase().includes(q));
         const mp = !fp || t.project === fp;
         const ms = !fs || String(t.status||'').toLowerCase() === fs;
-        return mq && mp && ms;
+        const md = !hideDone || String(t.status||'').toLowerCase() !== 'done';
+        return mq && mp && ms && md;
     });
 
     const container = document.getElementById('task-list');
