@@ -577,9 +577,11 @@ function showGantt() {
     ganttOffset = 0;
     renderGantt();
     document.getElementById('gantt-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';   // lock background page scroll
 }
 function hideGantt() {
     document.getElementById('gantt-overlay').classList.remove('show');
+    document.body.style.overflow = '';
 }
 
 function ganttBarClass(status) {
