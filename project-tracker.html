@@ -460,10 +460,16 @@ function parseCSV(text) {
 function exportCSV() {
     const cols = ['project','plant','title','detail','endTime','status','responsible'];
     const head = ['Project Name','Plant','Aufgabe','Detail','End Time','Status','Responsible'];
-    const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
-    const rows = items.map(t => cols.map(c => esc(t[c])).join(','));
-    const csv = '﻿' + [head.join(','), ...rows].join('\r\n');
-    download(new Blob([csv], { type: 'text/csv' }), 'camera-projects.csv');
+    // Replace newlines in Detail with " | " so each task stays on exactly one Excel row
+    const cell = (col, val) => {
+        let v = String(val ?? '');
+        if (col === 'detail') v = v.replace(/\r?\n/g, ' | ');
+        return '"' + v.replace(/"/g, '""') + '"';
+    };
+    const rows = items.map(t => cols.map(c => cell(c, t[c])).join(';'));
+    const head_row = head.map(h => '"' + h + '"').join(';');
+    const csv = '﻿' + [head_row, ...rows].join('\r\n');
+    download(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'camera-projects.csv');
     showMsg('CSV heruntergeladen.','success');
 }
 function download(blob, name) {
