@@ -153,9 +153,10 @@
     .gantt-table tr:last-child td { border-bottom: none; }
     .gantt-table tbody tr:hover td { background: #faf9f8; }
     .gantt-project-row td { background: #f0eff9; font-weight: 700; font-size: 13px;
-        border-left: 4px solid #6264a7; position: sticky; top: 0; z-index: 4; padding: 0; }
-    .gantt-project-label { position: sticky; left: 0; display: inline-block;
-        padding: 8px 14px; }
+        position: sticky; top: 0; z-index: 4; }
+    .gantt-project-row td.gantt-project-info { left: 0; z-index: 6;
+        border-left: 4px solid #6264a7; border-right: 2px solid #c8c6c4;
+        white-space: nowrap; }
     .gantt-project-row:hover td { background: #e8e7f5 !important; }
 
     .gantt-bar-cell { position: relative; }
@@ -668,9 +669,9 @@ function renderGantt() {
     let bodyRows = '';
     groups.forEach((tasks, project) => {
         bodyRows += `<tr class="gantt-project-row">
-            <td colspan="${WEEKS + 1}"><span class="gantt-project-label">${esc(project)}
+            <td class="col-info gantt-project-info">${esc(project)}
                 <span style="background:#6264a7;color:white;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:400;margin-left:6px">${tasks.length}</span>
-            </span></td></tr>`;
+            </td><td class="gantt-project-fill" colspan="${WEEKS}"></td></tr>`;
 
         tasks.forEach(t => {
             const hasEnd = t.endTime && !isNaN(new Date(t.endTime));
