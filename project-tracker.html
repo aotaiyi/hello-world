@@ -129,12 +129,7 @@
     <div class="toolbar">
         <input type="text" class="search" id="search" placeholder="🔍 Suchen …" oninput="render()">
         <select id="filter-project" onchange="render()"><option value="">Alle Projekte</option></select>
-        <select id="filter-status" onchange="render()">
-            <option value="">Alle Status</option>
-            <option value="open">open</option>
-            <option value="Process">Process</option>
-            <option value="done">done</option>
-        </select>
+        <select id="filter-status" onchange="render()"><option value="">Alle Status</option></select>
     </div>
 
     <div id="msg-area"></div>
@@ -258,6 +253,13 @@ function refreshFilters() {
     sel.innerHTML = '<option value="">Alle Projekte</option>' +
         projects.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
     sel.value = cur;
+
+    const ssel = document.getElementById('filter-status');
+    const scur = ssel.value;
+    const statuses = [...new Set(items.map(t => t.status).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    ssel.innerHTML = '<option value="">Alle Status</option>' +
+        statuses.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    ssel.value = scur;
 }
 
 function renderStats() {
