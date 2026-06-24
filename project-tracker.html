@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camera System Projects – Tracker</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f3f2f1; color: #323130; }
+
+    header {
+        background: #6264a7; color: white; padding: 16px 32px;
+        display: flex; justify-content: space-between; align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-wrap: wrap; gap: 10px;
+    }
+    header h1 { font-size: 20px; font-weight: 600; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn-primary { background: white; color: #6264a7; border: none; padding: 8px 18px;
+        border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-primary:hover { background: #edebe9; }
+    .btn-ghost { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
+        padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.15); }
+
+    .content { padding: 24px 32px; max-width: 1500px; margin: 0 auto; }
+
+    .toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    .toolbar input, .toolbar select { padding: 7px 10px; border: 1px solid #c8c6c4; border-radius: 4px; font-size: 14px; }
+    .toolbar input.search { flex: 1; min-width: 200px; }
+
+    .stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat-card { background: white; border-radius: 6px; padding: 12px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        min-width: 110px; }
+    .stat-card .num { font-size: 24px; font-weight: 700; }
+    .stat-card .lbl { font-size: 12px; color: #605e5c; }
+
+    .message { padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
+    .message.success { background: #d4f0e0; color: #0f6b35; border-left: 4px solid #107c10; }
+    .message.info    { background: #dce6f9; color: #1a56a0; border-left: 4px solid #1a56a0; }
+
+    .project-group { margin-bottom: 20px; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .project-header { background: white; padding: 12px 16px; border-left: 4px solid #6264a7;
+        font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+    .project-header:hover { background: #f3f2f1; }
+    .project-count { background: #6264a7; color: white; border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: 400; }
+    .chevron { font-size: 10px; color: #605e5c; transition: transform 0.2s; }
+    .collapsed .chevron { transform: rotate(-90deg); }
+
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th { background: #faf9f8; padding: 10px 14px; text-align: left; font-size: 12px;
+        font-weight: 600; color: #605e5c; border-bottom: 1px solid #edebe9; }
+    td { padding: 10px 14px; border-bottom: 1px solid #edebe9; font-size: 13px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf9f8; }
+    .task-name { font-weight: 500; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .plant-vat { background:#dce6f9; color:#1a56a0; } .plant-vac { background:#e8d5f5; color:#6b21a8; }
+    .plant-vam { background:#d4f0e0; color:#0f6b35; } .plant-eldisy { background:#fde8d8; color:#9c4221; }
+    .plant-other { background:#f3f2f1; color:#323130; border:1px solid #c8c6c4; }
+    .status-process { background:#dce6f9; color:#1a56a0; } .status-open { background:#fde8d8; color:#d73b02; }
+    .status-done { background:#d4f0e0; color:#107c10; } .status-other { background:#f3f2f1; color:#323130; }
+
+    .row-actions { white-space: nowrap; text-align: right; }
+    .btn-icon { background: none; border: none; cursor: pointer; padding: 4px 7px; border-radius: 4px;
+        font-size: 15px; color: #605e5c; transition: all 0.15s; }
+    .btn-icon:hover { background: #edebe9; }
+    .btn-icon.delete:hover { background: #fde8d8; }
+
+    .empty { text-align: center; padding: 60px; color: #605e5c; font-size: 14px; background: white; border-radius: 4px; }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+        align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: white; border-radius: 8px; padding: 32px; width: 520px; max-width: 95vw;
+        max-height: 92vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.25); }
+    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #605e5c; margin-bottom: 5px; }
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%; padding: 7px 10px; border: 1px solid #c8c6c4; border-radius: 4px;
+        font-size: 14px; font-family: inherit; background: white; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+        outline: none; border-color: #6264a7; box-shadow: 0 0 0 1px #6264a7; }
+    .form-group textarea { resize: vertical; min-height: 72px; }
+    .required::after { content: ' *'; color: #d73b02; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;
+        border-top: 1px solid #edebe9; padding-top: 20px; }
+    .btn-save { background: #6264a7; color: white; border: none; padding: 8px 20px; border-radius: 4px;
+        cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-save:hover { background: #585a96; }
+    .btn-cancel { background: white; color: #323130; border: 1px solid #c8c6c4; padding: 8px 20px;
+        border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .btn-cancel:hover { background: #f3f2f1; }
+
+    @media (max-width: 768px) {
+        header { padding: 12px 16px; } .content { padding: 16px; }
+        .form-row { grid-template-columns: 1fr; }
+        th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { display: none; }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>📷 Camera System Projects</h1>
+    <div class="header-actions">
+        <button class="btn-ghost" onclick="exportJSON()">⬇ Backup (JSON)</button>
+        <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+        <button class="btn-ghost" onclick="exportCSV()">📊 CSV (Excel)</button>
+        <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+    </div>
+</header>
+
+<div class="content">
+    <div class="stats" id="stats"></div>
+
+    <div class="toolbar">
+        <input type="text" class="search" id="search" placeholder="🔍 Suchen …" oninput="render()">
+        <select id="filter-project" onchange="render()"><option value="">Alle Projekte</option></select>
+        <select id="filter-status" onchange="render()">
+            <option value="">Alle Status</option>
+            <option value="open">open</option>
+            <option value="Process">Process</option>
+            <option value="done">done</option>
+        </select>
+    </div>
+
+    <div id="msg-area"></div>
+    <div id="task-list"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
+    <div class="modal">
+        <div class="modal-title" id="modal-title">Neues Element</div>
+        <div class="form-row">
+            <div class="form-group"><label class="required">Project Name</label>
+                <input type="text" id="f-project" placeholder="z.B. Eldisy, Multistation …"></div>
+            <div class="form-group"><label>Plant</label>
+                <input type="text" id="f-plant" placeholder="VAT / VAC / VAM …"></div>
+        </div>
+        <div class="form-group"><label class="required">Aufgabe</label>
+            <input type="text" id="f-title" placeholder="Aufgabenbeschreibung"></div>
+        <div class="form-group"><label>Detail</label>
+            <textarea id="f-detail" placeholder="Weitere Details …"></textarea></div>
+        <div class="form-row">
+            <div class="form-group"><label>End Time</label><input type="date" id="f-endtime"></div>
+            <div class="form-group"><label>Status</label>
+                <select id="f-status"><option value="open">open</option>
+                    <option value="Process">Process</option><option value="done">done</option></select></div>
+        </div>
+        <div class="form-group"><label>Responsible</label>
+            <input type="text" id="f-responsible" placeholder="Name der Person"></div>
+        <div class="form-actions">
+            <button class="btn-cancel" onclick="hideModal()">Abbrechen</button>
+            <button class="btn-save" id="btn-save" onclick="saveItem()">Speichern</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  Local-only project tracker  (no SharePoint, no API)
+//  Data is stored in the browser via localStorage.
+// ════════════════════════════════════════════════
+const STORAGE_KEY = 'cameraSystemProjects.v1';
+let items = [];
+let editingId = null;
+
+// ── Seed data (from the existing list) ──
+const SEED = [
+    { project:'VorwerkCam', plant:'VAT', title:'3D-own Camera System develop',
+      detail:'- AI Model - done\n- Model Training Software - 1. draft - CW26\n- Production Software - in Oct.',
+      endTime:'', status:'Process', responsible:'Li, Wenxiang' },
+    { project:'Multistation', plant:'VAT', title:'Multistation AI Model Training',
+      detail:'', endTime:'2026-06-26', status:'Process', responsible:'Warspite Huang' },
+    { project:'Multistation', plant:'VAT', title:'Multistaiton Camera Workflow set up',
+      detail:'', endTime:'2026-07-03', status:'Process', responsible:'Warspite Huang' },
+    { project:'Multistation', plant:'VAC', title:'Mulistation Camera System installation training',
+      detail:'- install\n- software workflow', endTime:'', status:'open', responsible:'Mandic, Vule' },
+    { project:'Multistation', plant:'VAC', title:'Multistation Camera System in VAC support',
+      detail:'', endTime:'', status:'open', responsible:'Maki, Mohamed' },
+    { project:'Eldisy', plant:'Eldisy', title:'Change the Machine',
+      detail:'Build the Camera System on the machine', endTime:'2026-06-30', status:'Process', responsible:'Moellmann, Andre' },
+    { project:'Eldisy', plant:'Eldisy', title:'Camera Program set up',
+      detail:'', endTime:'', status:'open', responsible:'Li, Wenxiang' },
+];
+
+// ── Persistence ──
+function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+        try { items = JSON.parse(raw); return; } catch (_) {}
+    }
+    // first run → seed
+    items = SEED.map((s, i) => ({ id: i + 1, ...s }));
+    save();
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+function nextId() { return items.length ? Math.max(...items.map(t => t.id)) + 1 : 1; }
+
+// ── Helpers ──
+function plantClass(p){switch((p||'').toLowerCase()){case'vat':return'plant-vat';case'vac':return'plant-vac';
+    case'vam':return'plant-vam';case'eldisy':return'plant-eldisy';default:return'plant-other';}}
+function statusClass(s){switch((s||'').toLowerCase()){case'process':return'status-process';case'open':return'status-open';
+    case'done':return'status-done';default:return'status-other';}}
+function fmtDate(d){if(!d)return'–';const dt=new Date(d);return isNaN(dt)?esc(d):
+    dt.toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function showMsg(t,type='info'){const el=document.getElementById('msg-area');
+    el.innerHTML=`<div class="message ${type}">${t}</div>`;setTimeout(()=>el.innerHTML='',4000);}
+
+// ── Render ──
+function refreshFilters() {
+    const sel = document.getElementById('filter-project');
+    const cur = sel.value;
+    const projects = [...new Set(items.map(t => t.project).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">Alle Projekte</option>' +
+        projects.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    sel.value = cur;
+}
+
+function renderStats() {
+    const total = items.length;
+    const open = items.filter(t => (t.status||'').toLowerCase()==='open').length;
+    const proc = items.filter(t => (t.status||'').toLowerCase()==='process').length;
+    const done = items.filter(t => (t.status||'').toLowerCase()==='done').length;
+    const projects = new Set(items.map(t => t.project).filter(Boolean)).size;
+    document.getElementById('stats').innerHTML = `
+        <div class="stat-card"><div class="num">${total}</div><div class="lbl">Aufgaben</div></div>
+        <div class="stat-card"><div class="num">${projects}</div><div class="lbl">Projekte</div></div>
+        <div class="stat-card"><div class="num" style="color:#d73b02">${open}</div><div class="lbl">open</div></div>
+        <div class="stat-card"><div class="num" style="color:#1a56a0">${proc}</div><div class="lbl">Process</div></div>
+        <div class="stat-card"><div class="num" style="color:#107c10">${done}</div><div class="lbl">done</div></div>`;
+}
+
+function render() {
+    renderStats();
+    const q  = document.getElementById('search').value.toLowerCase().trim();
+    const fp = document.getElementById('filter-project').value;
+    const fs = document.getElementById('filter-status').value.toLowerCase();
+
+    const filtered = items.filter(t => {
+        const mq = !q || [t.title,t.project,t.detail,t.plant,t.responsible]
+            .some(v => String(v||'').toLowerCase().includes(q));
+        const mp = !fp || t.project === fp;
+        const ms = !fs || String(t.status||'').toLowerCase() === fs;
+        return mq && mp && ms;
+    });
+
+    const container = document.getElementById('task-list');
+    if (!filtered.length) { container.innerHTML = '<div class="empty">Keine Einträge gefunden.</div>'; return; }
+
+    const groups = new Map();
+    filtered.forEach(t => { const k=t.project||'(Kein Projekt)'; if(!groups.has(k))groups.set(k,[]); groups.get(k).push(t); });
+
+    let html = '';
+    groups.forEach((tasks, project) => {
+        const rows = tasks.map(t => `
+            <tr>
+                <td>${t.plant?`<span class="badge ${plantClass(t.plant)}">${esc(t.plant)}</span>`:'–'}</td>
+                <td class="task-name">${esc(t.title)||'–'}</td>
+                <td style="max-width:280px;word-break:break-word;white-space:pre-line">${esc(t.detail)||'–'}</td>
+                <td style="white-space:nowrap">${fmtDate(t.endTime)}</td>
+                <td>${esc(t.responsible)||'–'}</td>
+                <td>${t.status?`<span class="badge ${statusClass(t.status)}">${esc(t.status)}</span>`:'–'}</td>
+                <td class="row-actions">
+                    <button class="btn-icon" onclick="openModal(${t.id})" title="Bearbeiten">✏️</button>
+                    <button class="btn-icon delete" onclick="confirmDelete(${t.id})" title="Löschen">🗑</button>
+                </td>
+            </tr>`).join('');
+        html += `
+        <div class="project-group">
+            <div class="project-header" onclick="toggleGroup(this)">
+                <span class="chevron">▼</span><span>${esc(project)}</span>
+                <span class="project-count">${tasks.length}</span>
+            </div>
+            <table>
+                <thead><tr><th>Plant</th><th>Aufgabe</th><th>Detail</th>
+                    <th>End Time</th><th>Responsible</th><th>Status</th><th></th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function toggleGroup(h){const t=h.nextElementSibling;h.classList.toggle('collapsed');
+    t.style.display=h.classList.contains('collapsed')?'none':'';}
+
+// ── Modal ──
+function openModal(id) {
+    editingId = id ?? null;
+    document.getElementById('modal-title').textContent = editingId ? 'Element bearbeiten' : 'Neues Element';
+    const t = editingId ? items.find(x => x.id === editingId) : {};
+    document.getElementById('f-project').value     = t.project || '';
+    document.getElementById('f-plant').value       = t.plant || '';
+    document.getElementById('f-title').value       = t.title || '';
+    document.getElementById('f-detail').value      = t.detail || '';
+    document.getElementById('f-endtime').value     = t.endTime || '';
+    document.getElementById('f-status').value      = t.status || 'open';
+    document.getElementById('f-responsible').value = t.responsible || '';
+    document.getElementById('modal').classList.add('show');
+    document.getElementById('f-project').focus();
+}
+function hideModal(){document.getElementById('modal').classList.remove('show');editingId=null;}
+function onOverlayClick(e){if(e.target===document.getElementById('modal'))hideModal();}
+
+function saveItem() {
+    const title   = document.getElementById('f-title').value.trim();
+    const project = document.getElementById('f-project').value.trim();
+    if (!title)   { showMsg('Bitte Aufgabe ausfüllen.','info'); return; }
+    if (!project) { showMsg('Bitte Project Name ausfüllen.','info'); return; }
+
+    const data = {
+        project, title,
+        plant:       document.getElementById('f-plant').value.trim(),
+        detail:      document.getElementById('f-detail').value.trim(),
+        endTime:     document.getElementById('f-endtime').value,
+        status:      document.getElementById('f-status').value,
+        responsible: document.getElementById('f-responsible').value.trim()
+    };
+
+    if (editingId) {
+        const i = items.findIndex(x => x.id === editingId);
+        items[i] = { ...items[i], ...data };
+        showMsg('✔ Element aktualisiert.','success');
+    } else {
+        items.push({ id: nextId(), ...data });
+        showMsg('✔ Element hinzugefügt.','success');
+    }
+    save(); hideModal(); refreshFilters(); render();
+}
+
+function confirmDelete(id) {
+    const t = items.find(x => x.id === id);
+    if (!confirm(`„${t?.title || 'Element'}" wirklich löschen?`)) return;
+    items = items.filter(x => x.id !== id);
+    save(); refreshFilters(); render();
+    showMsg('Element gelöscht.','success');
+}
+
+// ── Import / Export ──
+function exportJSON() {
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
+    download(blob, 'camera-projects-backup.json');
+    showMsg('Backup heruntergeladen.','success');
+}
+function importJSON(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+        try {
+            const data = JSON.parse(r.result);
+            if (!Array.isArray(data)) throw new Error('Ungültiges Format');
+            items = data.map((d, i) => ({ id: d.id ?? i + 1, ...d }));
+            save(); refreshFilters(); render();
+            showMsg(`✔ ${items.length} Einträge importiert.`,'success');
+        } catch (err) { showMsg('Import-Fehler: ' + err.message,'info'); }
+    };
+    r.readAsText(file);
+    e.target.value = '';
+}
+function exportCSV() {
+    const cols = ['project','plant','title','detail','endTime','status','responsible'];
+    const head = ['Project Name','Plant','Aufgabe','Detail','End Time','Status','Responsible'];
+    const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+    const rows = items.map(t => cols.map(c => esc(t[c])).join(','));
+    const csv = '﻿' + [head.join(','), ...rows].join('\r\n');
+    download(new Blob([csv], { type: 'text/csv' }), 'camera-projects.csv');
+    showMsg('CSV heruntergeladen.','success');
+}
+function download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ── Init ──
+load();
+refreshFilters();
+render();
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideModal(); });
+</script>
+
+</body>
+</html>
