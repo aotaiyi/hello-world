@@ -243,7 +243,7 @@ function plantClass(p){switch((p||'').toLowerCase()){case'vat':return'plant-vat'
 function statusClass(s){switch((s||'').toLowerCase()){case'process':return'status-process';case'open':return'status-open';
     case'done':return'status-done';default:return'status-other';}}
 function fmtDate(d){if(!d)return'–';const dt=new Date(d);return isNaN(dt)?esc(d):
-    dt.toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});}
+    dt.toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'});}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function showMsg(t,type='info'){const el=document.getElementById('msg-area');
