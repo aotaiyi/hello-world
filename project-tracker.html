@@ -42,13 +42,8 @@
     .message.success { background: #d4f0e0; color: #0f6b35; border-left: 4px solid #107c10; }
     .message.info    { background: #dce6f9; color: #1a56a0; border-left: 4px solid #1a56a0; }
 
-    .project-group { margin-bottom: 20px; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    .project-header { background: white; padding: 12px 16px; border-left: 4px solid #6264a7;
-        font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
-    .project-header:hover { background: #f3f2f1; }
-    .project-count { background: #6264a7; color: white; border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: 400; }
-    .chevron { font-size: 10px; color: #605e5c; transition: transform 0.2s; }
-    .collapsed .chevron { transform: rotate(-90deg); }
+    .project-count { background: #6264a7; color: white; border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: 400; margin-left: 4px; }
+    .chevron { font-size: 11px; color: #605e5c; margin-right: 6px; }
 
     table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
     col.col-plant       { width: 70px; }
@@ -65,6 +60,13 @@
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #faf9f8; }
     .task-name { font-weight: 500; }
+
+    .group-hdr td { background: white; padding: 10px 16px; border-left: 4px solid #6264a7;
+        font-weight: 600; font-size: 14px; cursor: pointer; user-select: none; border-top: 16px solid #f3f2f1; }
+    .group-hdr:first-child td { border-top: none; }
+    .group-hdr td:hover { background: #f3f2f1; }
+    .table-wrapper { border-radius: 4px; overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
     .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
     .plant-vat { background:#dce6f9; color:#1a56a0; } .plant-vac { background:#e8d5f5; color:#6b21a8; }
@@ -302,13 +304,18 @@ function render() {
     const groups = new Map();
     filtered.forEach(t => { const k=t.project||'(Kein Projekt)'; if(!groups.has(k))groups.set(k,[]); groups.get(k).push(t); });
 
-    let html = '';
+    const gid = g => g.replace(/[^a-z0-9]/gi,'_');
+    let bodyRows = '';
     groups.forEach((tasks, project) => {
-        const rows = tasks.map(t => `
-            <tr>
+        const key = gid(project);
+        bodyRows += `<tr class="group-hdr" onclick="toggleGroup('${key}')">
+            <td colspan="7"><span class="chevron" id="chv-${key}">▼</span>
+            ${esc(project)} <span class="project-count">${tasks.length}</span></td></tr>`;
+        bodyRows += tasks.map(t => `
+            <tr class="task-row" data-grp="${key}">
                 <td>${t.plant?`<span class="badge ${plantClass(t.plant)}">${esc(t.plant)}</span>`:'–'}</td>
                 <td class="task-name">${esc(t.title)||'–'}</td>
-                <td style="word-break:break-word;white-space:pre-line">${esc(t.detail)||'–'}</td>
+                <td style="white-space:pre-line">${esc(t.detail)||'–'}</td>
                 <td style="white-space:nowrap">${fmtDate(t.endTime)}</td>
                 <td>${esc(t.responsible)||'–'}</td>
                 <td>${t.status?`<span class="badge ${statusClass(t.status)}">${esc(t.status)}</span>`:'–'}</td>
@@ -317,30 +324,30 @@ function render() {
                     <button class="btn-icon delete" onclick="confirmDelete(${t.id})" title="Löschen">🗑</button>
                 </td>
             </tr>`).join('');
-        html += `
-        <div class="project-group">
-            <div class="project-header" onclick="toggleGroup(this)">
-                <span class="chevron">▼</span><span>${esc(project)}</span>
-                <span class="project-count">${tasks.length}</span>
-            </div>
-            <table>
-                <colgroup>
-                    <col class="col-plant"><col class="col-aufgabe"><col class="col-detail">
-                    <col class="col-endtime"><col class="col-responsible"><col class="col-status"><col class="col-actions">
-                </colgroup>
-                <thead><tr>
-                    <th>Plant</th><th>Aufgabe</th><th>Detail</th>
-                    <th>End Time</th><th>Responsible</th><th>Status</th><th></th>
-                </tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>`;
     });
-    container.innerHTML = html;
+    container.innerHTML = `
+    <div class="table-wrapper">
+      <table>
+        <colgroup>
+          <col class="col-plant"><col class="col-aufgabe"><col class="col-detail">
+          <col class="col-endtime"><col class="col-responsible"><col class="col-status"><col class="col-actions">
+        </colgroup>
+        <thead><tr>
+          <th>Plant</th><th>Aufgabe</th><th>Detail</th>
+          <th>End Time</th><th>Responsible</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>`;
 }
 
-function toggleGroup(h){const t=h.nextElementSibling;h.classList.toggle('collapsed');
-    t.style.display=h.classList.contains('collapsed')?'none':'';}
+function toggleGroup(key) {
+    const rows = document.querySelectorAll(`.task-row[data-grp="${key}"]`);
+    const chv  = document.getElementById('chv-' + key);
+    const hide = chv.textContent === '▼';
+    chv.textContent = hide ? '▶' : '▼';
+    rows.forEach(r => r.style.display = hide ? 'none' : '');
+}
 
 // ── Modal ──
 function openModal(id) {
