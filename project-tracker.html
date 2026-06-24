@@ -108,11 +108,11 @@
     <h1>📷 Camera System Projects</h1>
     <div class="header-actions">
         <button class="btn-ghost" onclick="exportJSON()">⬇ Backup (JSON)</button>
-        <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+        <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import (JSON/CSV)</button>
         <button class="btn-ghost" onclick="exportCSV()">📊 CSV (Excel)</button>
         <button class="btn-ghost" onclick="loadSeed()" title="Alle Beispieldaten neu laden">↺ Beispieldaten</button>
         <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
-        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+        <input type="file" id="import-file" accept=".json,.csv,.txt" style="display:none" onchange="importFile(event)">
     </div>
 </header>
 
@@ -379,12 +379,13 @@ function exportJSON() {
     download(blob, 'camera-projects-backup.json');
     showMsg('Backup heruntergeladen.','success');
 }
-function importJSON(e) {
+function importFile(e) {
     const file = e.target.files[0]; if (!file) return;
+    const isCSV = /\.(csv|txt)$/i.test(file.name);
     const r = new FileReader();
     r.onload = () => {
         try {
-            const data = JSON.parse(r.result);
+            const data = isCSV ? parseCSV(r.result) : JSON.parse(r.result);
             if (!Array.isArray(data)) throw new Error('Ungültiges Format');
             items = data.map((d, i) => ({ id: d.id ?? i + 1, ...d }));
             save(); refreshFilters(); render();
@@ -393,6 +394,57 @@ function importJSON(e) {
     };
     r.readAsText(file);
     e.target.value = '';
+}
+
+// Map a CSV header (German or English display name) to our internal field
+function mapHeader(h) {
+    const k = h.toLowerCase().replace(/\s|_/g,'');
+    if (/project/.test(k))                       return 'project';
+    if (/plant|werk/.test(k))                    return 'plant';
+    if (/aufgabe|task|title|titel/.test(k))      return 'title';
+    if (/detail|beschreib|description/.test(k))  return 'detail';
+    if (/end.?time|enddat|fällig|due|datum/.test(k)) return 'endTime';
+    if (/status/.test(k))                        return 'status';
+    if (/respons|verantwort|owner|zuständ/.test(k)) return 'responsible';
+    return null;
+}
+
+// Minimal RFC-4180 CSV parser (handles quotes, commas/newlines in fields)
+function parseCSV(text) {
+    text = text.replace(/^﻿/, '');                 // strip BOM
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i], n = text[i+1];
+        if (inQuotes) {
+            if (c === '"' && n === '"') { field += '"'; i++; }
+            else if (c === '"')         { inQuotes = false; }
+            else                        { field += c; }
+        } else {
+            if (c === '"')                       { inQuotes = true; }
+            else if (c === ',' || c === ';')     { row.push(field); field = ''; }
+            else if (c === '\r')                 { /* skip */ }
+            else if (c === '\n')                 { row.push(field); rows.push(row); row = []; field = ''; }
+            else                                 { field += c; }
+        }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    if (rows.length < 2) throw new Error('Keine Datenzeilen gefunden');
+
+    const headers = rows[0].map(mapHeader);
+    return rows.slice(1)
+        .filter(r => r.some(v => v.trim() !== ''))      // skip empty rows
+        .map(r => {
+            const obj = {};
+            headers.forEach((field, idx) => { if (field) obj[field] = (r[idx] || '').trim(); });
+            // normalise a parsed date to yyyy-mm-dd for the date input
+            if (obj.endTime) {
+                const d = new Date(obj.endTime);
+                if (!isNaN(d)) obj.endTime = d.toISOString().substring(0,10);
+            }
+            return obj;
+        })
+        .filter(o => o.title || o.project);             // need at least a task or project
 }
 function exportCSV() {
     const cols = ['project','plant','title','detail','endTime','status','responsible'];
