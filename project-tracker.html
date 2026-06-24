@@ -114,21 +114,23 @@
         th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { display: none; }
     }
 
-    /* ── Gantt overlay ── */
-    #gantt-overlay { display: none; position: fixed; inset: 0; background: #f3f2f1;
-        z-index: 300; flex-direction: column; overflow: hidden; }
-    #gantt-overlay.show { display: flex; }
+    /* ── Gantt view (uses the normal page scrollbar) ── */
+    #gantt-overlay { display: none; background: #f3f2f1; }
+    #gantt-overlay.show { display: block; }
     #gantt-header { background: #6264a7; color: white; padding: 14px 28px;
-        display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-shrink: 0; }
+        display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        position: sticky; top: 0; z-index: 10; }
     #gantt-header h2 { font-size: 18px; font-weight: 600; flex: 1; }
     #gantt-close { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
         padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
     #gantt-close:hover { background: rgba(255,255,255,0.15); }
 
-    #gantt-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-    #gantt-legend-bar { padding: 10px 28px; flex-shrink: 0; display: flex; gap: 16px;
-        align-items: center; font-size: 13px; flex-wrap: wrap; background: #f3f2f1; }
-    #gantt-scroll { flex: 1; overflow: auto; padding: 0 0 16px 0; }
+    #gantt-body { }
+    #gantt-legend-bar { padding: 10px 28px; display: flex; gap: 16px;
+        align-items: center; font-size: 13px; flex-wrap: wrap; background: #f3f2f1;
+        position: sticky; top: 56px; z-index: 9; }
+    /* only horizontal scrolling inside; vertical scrolling is the page's */
+    #gantt-scroll { overflow-x: auto; overflow-y: visible; padding: 0 0 16px 0; }
 
     /* sticky left column while horizontal-scrolling */
     .gantt-table { border-collapse: separate; border-spacing: 0; background: white;
@@ -574,14 +576,16 @@ document.addEventListener('keydown', e => {
 let ganttOffset = 0; // weeks offset from today
 
 function showGantt() {
-    ganttOffset = 0;
     renderGantt();
+    document.querySelector('header').style.display = 'none';
+    document.querySelector('.content').style.display = 'none';
     document.getElementById('gantt-overlay').classList.add('show');
-    document.body.style.overflow = 'hidden';   // lock background page scroll
+    window.scrollTo(0, 0);
 }
 function hideGantt() {
     document.getElementById('gantt-overlay').classList.remove('show');
-    document.body.style.overflow = '';
+    document.querySelector('header').style.display = '';
+    document.querySelector('.content').style.display = '';
 }
 
 function ganttBarClass(status) {
