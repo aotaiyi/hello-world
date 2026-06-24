@@ -47,10 +47,18 @@
     .chevron { font-size: 10px; color: #605e5c; transition: transform 0.2s; }
     .collapsed .chevron { transform: rotate(-90deg); }
 
-    table { width: 100%; border-collapse: collapse; background: white; }
+    table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
+    col.col-plant       { width: 90px; }
+    col.col-aufgabe     { width: 22%; }
+    col.col-detail      { width: auto; }
+    col.col-endtime     { width: 120px; }
+    col.col-responsible { width: 150px; }
+    col.col-status      { width: 90px; }
+    col.col-actions     { width: 68px; }
     th { background: #faf9f8; padding: 10px 14px; text-align: left; font-size: 12px;
-        font-weight: 600; color: #605e5c; border-bottom: 1px solid #edebe9; }
-    td { padding: 10px 14px; border-bottom: 1px solid #edebe9; font-size: 13px; vertical-align: middle; }
+        font-weight: 600; color: #605e5c; border-bottom: 1px solid #edebe9; overflow: hidden; }
+    td { padding: 10px 14px; border-bottom: 1px solid #edebe9; font-size: 13px; vertical-align: middle;
+        overflow: hidden; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #faf9f8; }
     .task-name { font-weight: 500; }
@@ -110,7 +118,6 @@
         <button class="btn-ghost" onclick="exportJSON()">⬇ Backup (JSON)</button>
         <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import (JSON/CSV)</button>
         <button class="btn-ghost" onclick="exportCSV()">📊 CSV (Excel)</button>
-        <button class="btn-ghost" onclick="loadSeed()" title="Alle Beispieldaten neu laden">↺ Beispieldaten</button>
         <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
         <input type="file" id="import-file" accept=".json,.csv,.txt" style="display:none" onchange="importFile(event)">
     </div>
@@ -293,7 +300,7 @@ function render() {
             <tr>
                 <td>${t.plant?`<span class="badge ${plantClass(t.plant)}">${esc(t.plant)}</span>`:'–'}</td>
                 <td class="task-name">${esc(t.title)||'–'}</td>
-                <td style="max-width:280px;word-break:break-word;white-space:pre-line">${esc(t.detail)||'–'}</td>
+                <td style="word-break:break-word;white-space:pre-line">${esc(t.detail)||'–'}</td>
                 <td style="white-space:nowrap">${fmtDate(t.endTime)}</td>
                 <td>${esc(t.responsible)||'–'}</td>
                 <td>${t.status?`<span class="badge ${statusClass(t.status)}">${esc(t.status)}</span>`:'–'}</td>
@@ -309,6 +316,10 @@ function render() {
                 <span class="project-count">${tasks.length}</span>
             </div>
             <table>
+                <colgroup>
+                    <col class="col-plant"><col class="col-aufgabe"><col class="col-detail">
+                    <col class="col-endtime"><col class="col-responsible"><col class="col-status"><col class="col-actions">
+                </colgroup>
                 <thead><tr><th>Plant</th><th>Aufgabe</th><th>Detail</th>
                     <th>End Time</th><th>Responsible</th><th>Status</th><th></th></tr></thead>
                 <tbody>${rows}</tbody>
