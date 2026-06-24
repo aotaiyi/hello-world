@@ -110,6 +110,7 @@
         <button class="btn-ghost" onclick="exportJSON()">⬇ Backup (JSON)</button>
         <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import</button>
         <button class="btn-ghost" onclick="exportCSV()">📊 CSV (Excel)</button>
+        <button class="btn-ghost" onclick="loadSeed()" title="Alle Beispieldaten neu laden">↺ Beispieldaten</button>
         <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
         <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
     </div>
@@ -171,11 +172,14 @@ const STORAGE_KEY = 'cameraSystemProjects.v1';
 let items = [];
 let editingId = null;
 
-// ── Seed data (from the existing list) ──
+// ── Seed data (from the existing SharePoint list) ──
 const SEED = [
+    // ── VorwerkCam ──
     { project:'VorwerkCam', plant:'VAT', title:'3D-own Camera System develop',
       detail:'- AI Model - done\n- Model Training Software - 1. draft - CW26\n- Production Software - in Oct.',
       endTime:'', status:'Process', responsible:'Li, Wenxiang' },
+
+    // ── Multistation ──
     { project:'Multistation', plant:'VAT', title:'Multistation AI Model Training',
       detail:'', endTime:'2026-06-26', status:'Process', responsible:'Warspite Huang' },
     { project:'Multistation', plant:'VAT', title:'Multistaiton Camera Workflow set up',
@@ -184,13 +188,37 @@ const SEED = [
       detail:'- install\n- software workflow', endTime:'', status:'open', responsible:'Mandic, Vule' },
     { project:'Multistation', plant:'VAC', title:'Multistation Camera System in VAC support',
       detail:'', endTime:'', status:'open', responsible:'Maki, Mohamed' },
+
+    // ── Eldisy ──
     { project:'Eldisy', plant:'Eldisy', title:'Change the Machine',
       detail:'Build the Camera System on the machine', endTime:'2026-06-30', status:'Process', responsible:'Moellmann, Andre' },
     { project:'Eldisy', plant:'Eldisy', title:'Camera Program set up',
       detail:'', endTime:'', status:'open', responsible:'Li, Wenxiang' },
+
+    // ── 2300213 ──
+    { project:'2300213', plant:'VAM', title:'VAM order the Machine',
+      detail:'Turn table with three Station', endTime:'2026-06-30', status:'Process', responsible:'Serna, Alejandro' },
+    { project:'2300213', plant:'VAM', title:'Order Hanswell Camera System',
+      detail:'quote already got from Hanswell', endTime:'2026-06-30', status:'Process', responsible:'Serna, Alejandro' },
+    { project:'2300213', plant:'VAM', title:'prepare some NG and OK parts',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+    { project:'2300213', plant:'VAM', title:'take picture for the NG and OK parts on Machine',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+    { project:'2300213', plant:'VAM', title:'AI Model training for 2300213',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+
+    // ── 17443 ──
+    { project:'17443', plant:'VAT', title:'Order the Machine from Reao',
+      detail:'Purchasing request already started', endTime:'2026-06-30', status:'Process', responsible:'Li, Wenxiang' },
 ];
 
 // ── Persistence ──
+function loadSeed() {
+    if (!confirm('Alle aktuellen Daten löschen und Beispieldaten neu laden?\n(Mache vorher ein Backup mit "Backup (JSON)"!)')) return;
+    items = SEED.map((s, i) => ({ id: i + 1, ...s }));
+    save(); refreshFilters(); render();
+    showMsg(`✔ ${items.length} Beispiel-Einträge geladen.`, 'success');
+}
 function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
