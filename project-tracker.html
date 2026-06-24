@@ -113,6 +113,57 @@
         .form-row { grid-template-columns: 1fr; }
         th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { display: none; }
     }
+
+    /* ── Gantt overlay ── */
+    #gantt-overlay { display: none; position: fixed; inset: 0; background: #f3f2f1;
+        z-index: 300; flex-direction: column; overflow: hidden; }
+    #gantt-overlay.show { display: flex; }
+    #gantt-header { background: #6264a7; color: white; padding: 14px 28px;
+        display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-shrink: 0; }
+    #gantt-header h2 { font-size: 18px; font-weight: 600; flex: 1; }
+    #gantt-nav { display: flex; gap: 8px; align-items: center; }
+    #gantt-nav button { background: rgba(255,255,255,0.15); color: white;
+        border: 1px solid rgba(255,255,255,0.5); padding: 6px 14px; border-radius: 4px;
+        cursor: pointer; font-size: 13px; }
+    #gantt-nav button:hover { background: rgba(255,255,255,0.28); }
+    #gantt-nav span { font-size: 14px; font-weight: 600; min-width: 160px; text-align: center; }
+    #gantt-close { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
+        padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    #gantt-close:hover { background: rgba(255,255,255,0.15); }
+
+    #gantt-body { flex: 1; overflow: auto; padding: 24px 28px; }
+    .gantt-table { width: 100%; border-collapse: collapse; background: white;
+        border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .gantt-table th { background: #faf9f8; padding: 9px 12px; font-size: 12px; font-weight: 600;
+        color: #605e5c; border-bottom: 2px solid #edebe9; white-space: nowrap; text-align: center; }
+    .gantt-table th.col-info { text-align: left; min-width: 220px; }
+    .gantt-table td { padding: 7px 12px; border-bottom: 1px solid #f3f2f1; font-size: 13px; vertical-align: middle; }
+    .gantt-table td.col-info { min-width: 220px; max-width: 280px; }
+    .gantt-table td.day-cell { min-width: 28px; width: 28px; padding: 4px 2px; }
+    .gantt-table tr:last-child td { border-bottom: none; }
+    .gantt-table tr:hover td { background: #faf9f8; }
+    .gantt-project-row td { background: #f0eff9; font-weight: 700; font-size: 13px;
+        border-left: 4px solid #6264a7; }
+    .gantt-project-row:hover td { background: #e8e7f5 !important; }
+
+    .gantt-bar-cell { position: relative; }
+    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%);
+        height: 16px; border-radius: 3px; min-width: 4px; }
+    .gantt-bar.status-process { background: #6264a7; }
+    .gantt-bar.status-open    { background: #f0a070; }
+    .gantt-bar.status-done    { background: #55a86a; }
+    .gantt-bar.status-urgent  { background: #d73b02; }
+    .gantt-bar.status-other   { background: #a0a0a0; }
+    .gantt-bar:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px);
+        left: 0; background: #323130; color: white; padding: 4px 8px; border-radius: 4px;
+        font-size: 12px; white-space: nowrap; z-index: 10; pointer-events: none; }
+
+    .today-line { background: #d73b02 !important; }
+    .weekend-cell { background: #f9f8f7; }
+    .gantt-legend { display: flex; gap: 16px; align-items: center; margin-bottom: 16px;
+        font-size: 13px; flex-wrap: wrap; }
+    .gantt-legend-item { display: flex; align-items: center; gap: 6px; }
+    .gantt-legend-dot { width: 14px; height: 14px; border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -123,6 +174,7 @@
         <button class="btn-ghost" onclick="exportJSON()">⬇ Backup (JSON)</button>
         <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import (JSON/CSV)</button>
         <button class="btn-ghost" onclick="exportCSV()">📊 CSV (Excel)</button>
+        <button class="btn-ghost" onclick="showGantt()">📅 Gantt</button>
         <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
         <input type="file" id="import-file" accept=".json,.csv,.txt" style="display:none" onchange="importFile(event)">
     </div>
@@ -500,8 +552,176 @@ function download(blob, name) {
 load();
 refreshFilters();
 render();
-document.addEventListener('keydown', e => { if (e.key === 'Escape') hideModal(); });
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        if (document.getElementById('gantt-overlay').classList.contains('show')) hideGantt();
+        else hideModal();
+    }
+});
+
+// ══════════════════════════════════════════════════
+//  GANTT CHART
+// ══════════════════════════════════════════════════
+let ganttOffset = 0; // weeks offset from today
+
+function showGantt() {
+    ganttOffset = 0;
+    renderGantt();
+    document.getElementById('gantt-overlay').classList.add('show');
+}
+function hideGantt() {
+    document.getElementById('gantt-overlay').classList.remove('show');
+}
+
+function ganttBarClass(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'process') return 'status-process';
+    if (s === 'open')    return 'status-open';
+    if (s === 'done')    return 'status-done';
+    if (s === 'urgent')  return 'status-urgent';
+    return 'status-other';
+}
+
+function renderGantt() {
+    const DAYS = 42; // 6 weeks displayed
+    const today = new Date(); today.setHours(0,0,0,0);
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() + ganttOffset * 7 - 7); // start 1 week before focus
+
+    // Build header dates
+    const dates = [];
+    for (let i = 0; i < DAYS; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        dates.push(d);
+    }
+
+    // Label row: month labels spanning days
+    let monthSpans = [];
+    let cur = null, count = 0;
+    dates.forEach(d => {
+        const lbl = d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' });
+        if (lbl === cur) { count++; }
+        else { if (cur) monthSpans.push({ lbl: cur, span: count }); cur = lbl; count = 1; }
+    });
+    monthSpans.push({ lbl: cur, span: count });
+
+    const monthHeaderCells = monthSpans.map(m =>
+        `<th colspan="${m.span}" style="border-right:1px solid #edebe9;background:#6264a7;color:white">${m.lbl}</th>`
+    ).join('');
+
+    const dayHeaderCells = dates.map(d => {
+        const isToday = d.getTime() === today.getTime();
+        const isWE = d.getDay() === 0 || d.getDay() === 6;
+        const cls = isToday ? 'today-line' : (isWE ? 'weekend-cell' : '');
+        return `<th class="${cls}" style="font-size:11px;padding:4px 2px;min-width:28px">${d.getDate()}</th>`;
+    }).join('');
+
+    // Group items
+    const groups = new Map();
+    items.forEach(t => {
+        const k = t.project || '(Kein Projekt)';
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(t);
+    });
+
+    let bodyRows = '';
+    groups.forEach((tasks, project) => {
+        bodyRows += `<tr class="gantt-project-row">
+            <td colspan="${DAYS + 1}">${esc(project)}
+                <span style="background:#6264a7;color:white;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:400;margin-left:6px">${tasks.length}</span>
+            </td></tr>`;
+
+        tasks.forEach(t => {
+            const hasEnd = t.endTime && !isNaN(new Date(t.endTime));
+            const endDate = hasEnd ? new Date(t.endTime) : null;
+            if (endDate) endDate.setHours(0,0,0,0);
+
+            // Bar: for tasks with endTime, show bar from max(startDate, today-14) to endDate
+            // For tasks without endTime, no bar
+            let barStartIdx = -1, barEndIdx = -1;
+            if (endDate) {
+                // Assume task starts today or earlier (no start field), show bar covering remaining days
+                const barStart = today < startDate ? startDate : today;
+                barStartIdx = Math.round((barStart - startDate) / 86400000);
+                barEndIdx   = Math.round((endDate   - startDate) / 86400000);
+                barStartIdx = Math.max(0, Math.min(barStartIdx, DAYS - 1));
+                barEndIdx   = Math.max(-1, Math.min(barEndIdx,   DAYS - 1));
+            }
+
+            const dayCells = dates.map((d, i) => {
+                const isToday = d.getTime() === today.getTime();
+                const isWE = d.getDay() === 0 || d.getDay() === 6;
+                let bg = isToday ? 'background:#fde8d8' : (isWE ? 'background:#f9f8f7' : '');
+
+                if (barStartIdx >= 0 && barEndIdx >= barStartIdx && i >= barStartIdx && i <= barEndIdx) {
+                    const isFirst = i === barStartIdx;
+                    const isLast  = i === barEndIdx;
+                    const barStyle = `background:${isToday?'#fde8d8':''}`;
+                    const radius = `border-radius:${isFirst?'3px':'0'} ${isLast?'3px':'0'} ${isLast?'3px':'0'} ${isFirst?'3px':'0'}`;
+                    const barCls = ganttBarClass(t.status);
+                    return `<td class="day-cell" style="${bg}">
+                        <div class="gantt-bar ${barCls}" style="position:relative;height:14px;width:100%;${radius}"
+                             data-tip="${esc(t.title)} — ${esc(t.endTime)}"></div></td>`;
+                }
+                return `<td class="day-cell" style="${bg}"></td>`;
+            }).join('');
+
+            const statusBadge = t.status
+                ? `<span class="badge ${statusClass(t.status)}" style="font-size:11px;padding:1px 7px">${esc(t.status)}</span>` : '';
+            bodyRows += `<tr>
+                <td class="col-info" style="max-width:260px;overflow:hidden;word-break:break-word">
+                    <div style="font-size:13px;font-weight:500">${esc(t.title)}</div>
+                    <div style="font-size:11px;color:#605e5c;margin-top:2px">${statusBadge}
+                        ${t.responsible ? `<span style="margin-left:4px">${esc(t.responsible)}</span>` : ''}
+                    </div>
+                </td>${dayCells}</tr>`;
+        });
+    });
+
+    // Range label
+    const startLbl = startDate.toLocaleDateString('de-DE', { day:'2-digit', month:'short' });
+    const endD = new Date(startDate); endD.setDate(endD.getDate() + DAYS - 1);
+    const endLbl = endD.toLocaleDateString('de-DE', { day:'2-digit', month:'short', year:'numeric' });
+    document.getElementById('gantt-range').textContent = `${startLbl} – ${endLbl}`;
+
+    document.getElementById('gantt-content').innerHTML = `
+    <div class="gantt-legend">
+        <span style="font-weight:600;font-size:13px;color:#605e5c">Status:</span>
+        <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#6264a7"></span>Process</span>
+        <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#f0a070"></span>open</span>
+        <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#55a86a"></span>done</span>
+        <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#d73b02"></span>Urgent</span>
+        <span style="margin-left:8px;font-size:12px;color:#605e5c">Balken = heute bis Endtermin</span>
+    </div>
+    <table class="gantt-table">
+        <thead>
+            <tr><th class="col-info" rowspan="2">Aufgabe</th>${monthHeaderCells}</tr>
+            <tr>${dayHeaderCells}</tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+    </table>`;
+}
 </script>
+
+<!-- Gantt Overlay -->
+<div id="gantt-overlay">
+    <div id="gantt-header">
+        <h2>📅 Gantt-Diagramm</h2>
+        <div id="gantt-nav">
+            <button onclick="ganttOffset -= 4; renderGantt()">◀◀ −4W</button>
+            <button onclick="ganttOffset -= 1; renderGantt()">◀ −1W</button>
+            <span id="gantt-range"></span>
+            <button onclick="ganttOffset += 1; renderGantt()">+1W ▶</button>
+            <button onclick="ganttOffset += 4; renderGantt()">+4W ▶▶</button>
+            <button onclick="ganttOffset = 0; renderGantt()">Heute</button>
+        </div>
+        <button id="gantt-close" onclick="hideGantt()">✕ Schließen</button>
+    </div>
+    <div id="gantt-body">
+        <div id="gantt-content"></div>
+    </div>
+</div>
 
 </body>
 </html>
