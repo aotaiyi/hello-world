@@ -1,0 +1,867 @@
+<%@ Page Language="C#" AutoEventWireup="true" %>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camera System Projects – Tracker</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f3f2f1; color: #323130; }
+
+    header {
+        background: #6264a7; color: white; padding: 16px 32px;
+        display: flex; justify-content: space-between; align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-wrap: wrap; gap: 10px;
+    }
+    header h1 { font-size: 20px; font-weight: 600; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn-primary { background: white; color: #6264a7; border: none; padding: 8px 18px;
+        border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-primary:hover { background: #edebe9; }
+    .btn-ghost { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
+        padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.15); }
+
+    .content { padding: 24px 32px; max-width: 1750px; margin: 0 auto; }
+
+    .toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    .toolbar input, .toolbar select { padding: 7px 10px; border: 1px solid #c8c6c4; border-radius: 4px; font-size: 14px; }
+    .toolbar input.search { flex: 1; min-width: 200px; }
+    .toolbar label.hide-done { display: flex; align-items: center; gap: 6px; font-size: 14px;
+        color: #323130; cursor: pointer; user-select: none; white-space: nowrap; }
+    .toolbar label.hide-done input { cursor: pointer; }
+
+    .stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .stat-card { background: white; border-radius: 6px; padding: 12px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        min-width: 110px; }
+    .stat-card .num { font-size: 24px; font-weight: 700; }
+    .stat-card .lbl { font-size: 12px; color: #605e5c; }
+
+    .message { padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
+    .message.success { background: #d4f0e0; color: #0f6b35; border-left: 4px solid #107c10; }
+    .message.info    { background: #dce6f9; color: #1a56a0; border-left: 4px solid #1a56a0; }
+
+    .project-count { background: #6264a7; color: white; border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: 400; margin-left: 4px; }
+    .chevron { font-size: 11px; color: #605e5c; margin-right: 6px; }
+
+    table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
+    col.col-plant       { width: 70px; }
+    col.col-aufgabe     { width: 24%; }
+    col.col-detail      { width: auto; }
+    col.col-endtime     { width: 120px; }
+    col.col-responsible { width: 130px; }
+    col.col-status      { width: 85px; }
+    col.col-actions     { width: 76px; }
+    th { background: #faf9f8; padding: 10px 14px; text-align: left; font-size: 12px;
+        font-weight: 600; color: #605e5c; border-bottom: 1px solid #edebe9; overflow: hidden; }
+    td { padding: 10px 14px; border-bottom: 1px solid #edebe9; font-size: 13px; vertical-align: middle;
+        overflow: hidden; word-break: break-word; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf9f8; }
+    .task-name { font-weight: 500; }
+
+    .group-hdr td { background: white; padding: 10px 16px; border-left: 4px solid #6264a7;
+        font-weight: 800; font-size: 15px; cursor: pointer; user-select: none; border-top: 16px solid #f3f2f1; }
+    .group-hdr:first-child td { border-top: none; }
+    .group-hdr td:hover { background: #f3f2f1; }
+    .table-wrapper { border-radius: 4px; overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .plant-vat { background:#dce6f9; color:#1a56a0; } .plant-vac { background:#e8d5f5; color:#6b21a8; }
+    .plant-vam { background:#d4f0e0; color:#0f6b35; } .plant-eldisy { background:#fde8d8; color:#9c4221; }
+    .plant-other { background:#f3f2f1; color:#323130; border:1px solid #c8c6c4; }
+    .status-process { background:#dce6f9; color:#1a56a0; } .status-open { background:#fde8d8; color:#d73b02; }
+    .status-done { background:#d4f0e0; color:#107c10; } .status-other { background:#f3f2f1; color:#323130; }
+
+    .row-actions { white-space: nowrap; text-align: right; padding-right: 12px !important; }
+    .btn-icon { background: none; border: none; cursor: pointer; padding: 4px 7px; border-radius: 4px;
+        font-size: 15px; color: #605e5c; transition: all 0.15s; }
+    .btn-icon:hover { background: #edebe9; }
+    .btn-icon.delete:hover { background: #fde8d8; }
+
+    .empty { text-align: center; padding: 60px; color: #605e5c; font-size: 14px; background: white; border-radius: 4px; }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400;
+        align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: white; border-radius: 8px; padding: 32px; width: 520px; max-width: 95vw;
+        max-height: 92vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.25); }
+    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #605e5c; margin-bottom: 5px; }
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%; padding: 7px 10px; border: 1px solid #c8c6c4; border-radius: 4px;
+        font-size: 14px; font-family: inherit; background: white; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+        outline: none; border-color: #6264a7; box-shadow: 0 0 0 1px #6264a7; }
+    .form-group textarea { resize: vertical; min-height: 72px; }
+    .required::after { content: ' *'; color: #d73b02; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px;
+        border-top: 1px solid #edebe9; padding-top: 20px; }
+    .btn-save { background: #6264a7; color: white; border: none; padding: 8px 20px; border-radius: 4px;
+        cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-save:hover { background: #585a96; }
+    .btn-cancel { background: white; color: #323130; border: 1px solid #c8c6c4; padding: 8px 20px;
+        border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .btn-cancel:hover { background: #f3f2f1; }
+
+    @media (max-width: 768px) {
+        header { padding: 12px 16px; } .content { padding: 16px; }
+        .form-row { grid-template-columns: 1fr; }
+        th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { display: none; }
+    }
+
+    /* ── Gantt view (full-screen, single H + V scroll area) ── */
+    #gantt-overlay { display: none; position: fixed; inset: 0; background: #f3f2f1;
+        z-index: 300; flex-direction: column; overflow: hidden; }
+    #gantt-overlay.show { display: flex; }
+    #gantt-header { background: #6264a7; color: white; padding: 14px 28px;
+        display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-shrink: 0; }
+    #gantt-header h2 { font-size: 18px; font-weight: 600; flex: 1; }
+    #gantt-close, #gantt-new, #gantt-export { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
+        padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    #gantt-close:hover, #gantt-new:hover, #gantt-export:hover { background: rgba(255,255,255,0.15); }
+    #gantt-new    { background: rgba(255,255,255,0.2); font-weight: 600; }
+
+    @media print {
+        /* Hide everything except the Gantt table */
+        body > *:not(#gantt-overlay)  { display: none !important; }
+        #gantt-overlay                { display: block !important; position: static !important;
+                                        background: white !important; z-index: auto !important; }
+        #gantt-header                 { display: none !important; }
+        #gantt-legend-bar             { display: none !important; }
+        #gantt-scroll                 { overflow: visible !important; height: auto !important; }
+        #gantt-body                   { overflow: visible !important; height: auto !important; }
+        #gantt-content                { padding: 0 !important; }
+        .gantt-table                  { width: max-content !important; }
+        .gantt-table th,
+        .gantt-table td               { position: static !important; }
+        /* Force the colored bars / status backgrounds to print */
+        .gantt-overlay, #gantt-content, .gantt-table,
+        .gantt-bar, .gantt-table td, .gantt-table th,
+        .gantt-project-row td, .badge {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        /* Apply hidden-status filtering: rows hidden via inline style stay hidden */
+        @page { size: A0 landscape; margin: 10mm; }
+    }
+
+    #gantt-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #gantt-legend-bar { padding: 10px 28px; display: flex; gap: 16px;
+        align-items: center; font-size: 13px; flex-wrap: wrap; background: #f3f2f1; flex-shrink: 0; }
+    /* single scroll area: horizontal scrollbar pinned at the bottom, vertical on the right */
+    #gantt-scroll { flex: 1; overflow: auto; padding: 0; }
+
+    /* sticky left column while horizontal-scrolling */
+    .gantt-table { border-collapse: separate; border-spacing: 0; background: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1); table-layout: auto; width: max-content; min-width: 100%; }
+    .gantt-table th { background: #faf9f8; padding: 8px 4px; font-size: 11px; font-weight: 600;
+        color: #605e5c; border-bottom: 2px solid #edebe9; border-right: 1px solid #edebe9;
+        white-space: nowrap; text-align: center; position: sticky; top: 0; z-index: 5; }
+    .gantt-table th.col-info { text-align: left; padding: 8px 14px;
+        vertical-align: middle; position: sticky; left: 0; top: 0; z-index: 7;
+        background: #faf9f8; border-right: 2px solid #c8c6c4; white-space: nowrap; }
+    .gantt-table td { padding: 7px 4px; border-bottom: 1px solid #f3f2f1; border-right: 1px solid #f3f2f1;
+        font-size: 13px; vertical-align: middle; }
+    .gantt-table td.col-info { padding: 7px 14px;
+        white-space: nowrap; position: sticky; left: 0; z-index: 2;
+        background: white; border-right: 2px solid #c8c6c4; }
+    .gantt-table td.week-cell { width: 58px; min-width: 58px; text-align: center; padding: 4px 2px; }
+    .gantt-table tr:last-child td { border-bottom: none; }
+    .gantt-table tbody tr:hover td { background: #faf9f8; }
+    .gantt-table tbody tr:hover td.col-info { background: #f3f2f1; }
+    .gantt-table td.week-cell { text-align: center; }
+    .gantt-table tr:last-child td { border-bottom: none; }
+    .gantt-table tbody tr:hover td { background: #faf9f8; }
+    .gantt-project-row td { background: #f0eff9; font-weight: 700; font-size: 13px; }
+    .gantt-project-row td.gantt-project-info { position: sticky; left: 0; z-index: 6;
+        background: #f0eff9;
+        border-left: 4px solid #6264a7; border-right: 2px solid #c8c6c4;
+        white-space: nowrap; }
+    .gantt-project-row td.gantt-project-fill { position: sticky; top: 0; z-index: 3; }
+    .gantt-project-row:hover td { background: #e8e7f5 !important; }
+    .gantt-task-row { cursor: pointer; }
+
+    .gantt-bar-cell { position: relative; }
+    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%);
+        height: 16px; border-radius: 3px; min-width: 4px; }
+    .gantt-bar.status-process { background: #6264a7; }
+    .gantt-bar.status-open    { background: #f0a070; }
+    .gantt-bar.status-done    { background: #55a86a; }
+    .gantt-bar.status-urgent  { background: #d73b02; }
+    .gantt-bar.status-other   { background: #a0a0a0; }
+    .gantt-bar:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px);
+        left: 0; background: #323130; color: white; padding: 4px 8px; border-radius: 4px;
+        font-size: 12px; white-space: nowrap; z-index: 10; pointer-events: none; }
+
+    .today-line { background: #d73b02 !important; }
+    .weekend-cell { background: #f9f8f7; }
+    .gantt-legend { display: flex; gap: 16px; align-items: center; margin-bottom: 16px;
+        font-size: 13px; flex-wrap: wrap; }
+    .gantt-legend-item { display: flex; align-items: center; gap: 6px;
+        cursor: pointer; user-select: none; padding: 3px 8px; border-radius: 4px;
+        border: 2px solid transparent; transition: opacity .15s, border-color .15s; }
+    .gantt-legend-item:hover { border-color: rgba(0,0,0,0.15); }
+    .gantt-legend-item.inactive { opacity: 0.38; }
+    .gantt-legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>📷 Camera System Projects</h1>
+    <div class="header-actions">
+        <button class="btn-ghost" onclick="exportJSON()">⬇ Backup (JSON)</button>
+        <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import (JSON/CSV)</button>
+        <button class="btn-ghost" onclick="exportCSV()">📊 CSV (Excel)</button>
+        <button class="btn-ghost" onclick="showGantt()">📅 Gantt</button>
+        <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
+        <input type="file" id="import-file" accept=".json,.csv,.txt" style="display:none" onchange="importFile(event)">
+    </div>
+</header>
+
+<div class="content">
+    <div class="stats" id="stats"></div>
+
+    <div class="toolbar">
+        <input type="text" class="search" id="search" placeholder="🔍 Suchen …" oninput="render()">
+        <select id="filter-project" onchange="render()"><option value="">Alle Projekte</option></select>
+        <select id="filter-status" onchange="render()"><option value="">Alle Status</option></select>
+        <label class="hide-done"><input type="checkbox" id="hide-done" onchange="render()"> „done" ausblenden</label>
+    </div>
+
+    <div id="msg-area"></div>
+    <div id="task-list"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
+    <div class="modal">
+        <div class="modal-title" id="modal-title">Neues Element</div>
+        <div class="form-row">
+            <div class="form-group"><label class="required">Project Name</label>
+                <input type="text" id="f-project" list="dl-project" placeholder="z.B. Eldisy, Multistation …" autocomplete="off">
+                <datalist id="dl-project"></datalist></div>
+            <div class="form-group"><label>Plant</label>
+                <input type="text" id="f-plant" list="dl-plant" placeholder="VAT / VAC / VAM …" autocomplete="off">
+                <datalist id="dl-plant"></datalist></div>
+        </div>
+        <div class="form-group"><label class="required">Aufgabe</label>
+            <input type="text" id="f-title" placeholder="Aufgabenbeschreibung"></div>
+        <div class="form-group"><label>Detail</label>
+            <textarea id="f-detail" placeholder="Weitere Details …"></textarea></div>
+        <div class="form-row">
+            <div class="form-group"><label>End Time</label><input type="date" id="f-endtime" lang="en-GB"></div>
+            <div class="form-group"><label>Status</label>
+                <select id="f-status"><option value="open">open</option>
+                    <option value="Process">Process</option><option value="done">done</option>
+                    <option value="Urgent">Urgent</option></select></div>
+        </div>
+        <div class="form-group"><label>Responsible</label>
+            <input type="text" id="f-responsible" placeholder="Name der Person"></div>
+        <div class="form-actions">
+            <button class="btn-cancel" onclick="hideModal()">Abbrechen</button>
+            <button class="btn-save" id="btn-save" onclick="saveItem()">Speichern</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  Local-only project tracker  (no SharePoint, no API)
+//  Data is stored in the browser via localStorage.
+// ════════════════════════════════════════════════
+const STORAGE_KEY = 'cameraSystemProjects.v1';
+let items = [];
+let editingId = null;
+const ganttHiddenStatuses = new Set();
+
+// ── Seed data (from the existing SharePoint list) ──
+const SEED = [
+    // ── VorwerkCam ──
+    { project:'VorwerkCam', plant:'VAT', title:'3D-own Camera System develop',
+      detail:'- AI Model - done\n- Model Training Software - 1. draft - CW26\n- Production Software - in Oct.',
+      endTime:'', status:'Process', responsible:'Li, Wenxiang' },
+
+    // ── Multistation ──
+    { project:'Multistation', plant:'VAT', title:'Multistation AI Model Training',
+      detail:'', endTime:'2026-06-26', status:'Process', responsible:'Warspite Huang' },
+    { project:'Multistation', plant:'VAT', title:'Multistaiton Camera Workflow set up',
+      detail:'', endTime:'2026-07-03', status:'Process', responsible:'Warspite Huang' },
+    { project:'Multistation', plant:'VAC', title:'Mulistation Camera System installation training',
+      detail:'- install\n- software workflow', endTime:'', status:'open', responsible:'Mandic, Vule' },
+    { project:'Multistation', plant:'VAC', title:'Multistation Camera System in VAC support',
+      detail:'', endTime:'', status:'open', responsible:'Maki, Mohamed' },
+
+    // ── Eldisy ──
+    { project:'Eldisy', plant:'Eldisy', title:'Change the Machine',
+      detail:'Build the Camera System on the machine', endTime:'2026-06-30', status:'Process', responsible:'Moellmann, Andre' },
+    { project:'Eldisy', plant:'Eldisy', title:'Camera Program set up',
+      detail:'', endTime:'', status:'open', responsible:'Li, Wenxiang' },
+
+    // ── 2300213 ──
+    { project:'2300213', plant:'VAM', title:'VAM order the Machine',
+      detail:'Turn table with three Station', endTime:'2026-06-30', status:'Process', responsible:'Serna, Alejandro' },
+    { project:'2300213', plant:'VAM', title:'Order Hanswell Camera System',
+      detail:'quote already got from Hanswell', endTime:'2026-06-30', status:'Process', responsible:'Serna, Alejandro' },
+    { project:'2300213', plant:'VAM', title:'prepare some NG and OK parts',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+    { project:'2300213', plant:'VAM', title:'take picture for the NG and OK parts on Machine',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+    { project:'2300213', plant:'VAM', title:'AI Model training for 2300213',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+
+    // ── 17443 ──
+    { project:'17443', plant:'VAT', title:'Order the Machine from Reao',
+      detail:'Purchasing request already started', endTime:'2026-06-30', status:'Process', responsible:'Li, Wenxiang' },
+];
+
+// ── Persistence ──
+function loadSeed() {
+    if (!confirm('Alle aktuellen Daten löschen und Beispieldaten neu laden?\n(Mache vorher ein Backup mit "Backup (JSON)"!)')) return;
+    items = SEED.map((s, i) => ({ id: i + 1, ...s }));
+    save(); refreshFilters(); render();
+    showMsg(`✔ ${items.length} Beispiel-Einträge geladen.`, 'success');
+}
+function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+        try { items = JSON.parse(raw); return; } catch (_) {}
+    }
+    // first run → seed
+    items = SEED.map((s, i) => ({ id: i + 1, ...s }));
+    save();
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+function nextId() { return items.length ? Math.max(...items.map(t => t.id)) + 1 : 1; }
+
+// ── Helpers ──
+function plantClass(p){switch((p||'').toLowerCase()){case'vat':return'plant-vat';case'vac':return'plant-vac';
+    case'vam':return'plant-vam';case'eldisy':return'plant-eldisy';default:return'plant-other';}}
+function statusClass(s){switch((s||'').toLowerCase()){case'process':return'status-process';case'open':return'status-open';
+    case'done':return'status-done';default:return'status-other';}}
+function fmtDate(d){if(!d)return'–';const dt=new Date(d);return isNaN(dt)?esc(d):
+    dt.toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'});}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function showMsg(t,type='info'){const el=document.getElementById('msg-area');
+    el.innerHTML=`<div class="message ${type}">${t}</div>`;setTimeout(()=>el.innerHTML='',4000);}
+
+// ── Render ──
+function refreshFilters() {
+    const sel = document.getElementById('filter-project');
+    const cur = sel.value;
+    const projects = [...new Set(items.map(t => t.project).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">Alle Projekte</option>' +
+        projects.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    sel.value = cur;
+
+    const ssel = document.getElementById('filter-status');
+    const scur = ssel.value;
+    const statuses = [...new Set(items.map(t => t.status).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    ssel.innerHTML = '<option value="">Alle Status</option>' +
+        statuses.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    ssel.value = scur;
+}
+
+function renderStats() {
+    const total = items.length;
+    const open = items.filter(t => (t.status||'').toLowerCase()==='open').length;
+    const proc = items.filter(t => (t.status||'').toLowerCase()==='process').length;
+    const done = items.filter(t => (t.status||'').toLowerCase()==='done').length;
+    const projects = new Set(items.map(t => t.project).filter(Boolean)).size;
+    document.getElementById('stats').innerHTML = `
+        <div class="stat-card"><div class="num">${total}</div><div class="lbl">Aufgaben</div></div>
+        <div class="stat-card"><div class="num">${projects}</div><div class="lbl">Projekte</div></div>
+        <div class="stat-card"><div class="num" style="color:#d73b02">${open}</div><div class="lbl">open</div></div>
+        <div class="stat-card"><div class="num" style="color:#1a56a0">${proc}</div><div class="lbl">Process</div></div>
+        <div class="stat-card"><div class="num" style="color:#107c10">${done}</div><div class="lbl">done</div></div>`;
+}
+
+function render() {
+    renderStats();
+    const q  = document.getElementById('search').value.toLowerCase().trim();
+    const fp = document.getElementById('filter-project').value;
+    const fs = document.getElementById('filter-status').value.toLowerCase();
+    const hideDone = document.getElementById('hide-done').checked;
+
+    const filtered = items.filter(t => {
+        const mq = !q || [t.title,t.project,t.detail,t.plant,t.responsible]
+            .some(v => String(v||'').toLowerCase().includes(q));
+        const mp = !fp || t.project === fp;
+        const ms = !fs || String(t.status||'').toLowerCase() === fs;
+        const md = !hideDone || String(t.status||'').toLowerCase() !== 'done';
+        return mq && mp && ms && md;
+    });
+
+    const container = document.getElementById('task-list');
+    if (!filtered.length) { container.innerHTML = '<div class="empty">Keine Einträge gefunden.</div>'; return; }
+
+    const groups = new Map();
+    filtered.forEach(t => { const k=t.project||'(Kein Projekt)'; if(!groups.has(k))groups.set(k,[]); groups.get(k).push(t); });
+
+    const gid = g => g.replace(/[^a-z0-9]/gi,'_');
+    let bodyRows = '';
+    groups.forEach((tasks, project) => {
+        const key = gid(project);
+        bodyRows += `<tr class="group-hdr" onclick="toggleGroup('${key}')">
+            <td colspan="7"><span class="chevron" id="chv-${key}">▼</span>
+            ${esc(project)} <span class="project-count">${tasks.length}</span></td></tr>`;
+        bodyRows += tasks.map(t => `
+            <tr class="task-row" data-grp="${key}">
+                <td>${t.plant?`<span class="badge ${plantClass(t.plant)}">${esc(t.plant)}</span>`:'–'}</td>
+                <td class="task-name">${esc(t.title)||'–'}</td>
+                <td style="white-space:pre-line">${esc(t.detail)||'–'}</td>
+                <td style="white-space:nowrap">${fmtDate(t.endTime)}</td>
+                <td>${esc(t.responsible)||'–'}</td>
+                <td>${t.status?`<span class="badge ${statusClass(t.status)}">${esc(t.status)}</span>`:'–'}</td>
+                <td class="row-actions">
+                    <button class="btn-icon" onclick="openModal(${t.id})" title="Bearbeiten">✏️</button>
+                    <button class="btn-icon delete" onclick="confirmDelete(${t.id})" title="Löschen">🗑</button>
+                </td>
+            </tr>`).join('');
+    });
+    container.innerHTML = `
+    <div class="table-wrapper">
+      <table>
+        <colgroup>
+          <col class="col-plant"><col class="col-aufgabe"><col class="col-detail">
+          <col class="col-endtime"><col class="col-responsible"><col class="col-status"><col class="col-actions">
+        </colgroup>
+        <thead><tr>
+          <th>Plant</th><th>Aufgabe</th><th>Detail</th>
+          <th>End Time</th><th>Responsible</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>`;
+}
+
+function toggleGroup(key) {
+    const rows = document.querySelectorAll(`.task-row[data-grp="${key}"]`);
+    const chv  = document.getElementById('chv-' + key);
+    const hide = chv.textContent === '▼';
+    chv.textContent = hide ? '▶' : '▼';
+    rows.forEach(r => r.style.display = hide ? 'none' : '');
+}
+
+// ── Modal ──
+function openModal(id) {
+    editingId = id ?? null;
+    document.getElementById('modal-title').textContent = editingId ? 'Element bearbeiten' : 'Neues Element';
+    const t = editingId ? items.find(x => x.id === editingId) : {};
+    fillDatalist('dl-project', items.map(x => x.project));
+    fillDatalist('dl-plant',   items.map(x => x.plant));
+    document.getElementById('f-project').value     = t.project || '';
+    document.getElementById('f-plant').value       = t.plant || '';
+    document.getElementById('f-title').value       = t.title || '';
+    document.getElementById('f-detail').value      = t.detail || '';
+    document.getElementById('f-endtime').value     = t.endTime || '';
+    document.getElementById('f-status').value      = t.status || 'open';
+    document.getElementById('f-responsible').value = t.responsible || '';
+    document.getElementById('modal').classList.add('show');
+    document.getElementById('f-project').focus();
+}
+function toggleGanttStatus(status) {
+    if (ganttHiddenStatuses.has(status)) ganttHiddenStatuses.delete(status);
+    else ganttHiddenStatuses.add(status);
+    // Update row visibility
+    document.querySelectorAll('.gantt-task-row').forEach(tr => {
+        const s = tr.dataset.status || '';
+        tr.style.display = ganttHiddenStatuses.has(s) ? 'none' : '';
+    });
+    // Update legend button appearance
+    document.querySelectorAll('.gantt-legend-item[data-status]').forEach(el => {
+        el.classList.toggle('inactive', ganttHiddenStatuses.has(el.dataset.status));
+    });
+}
+function fillDatalist(id, values) {
+    const uniq = [...new Set(values.map(v => (v || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    document.getElementById(id).innerHTML = uniq.map(v => `<option value="${esc(v)}">`).join('');
+}
+function hideModal(){document.getElementById('modal').classList.remove('show');editingId=null;}
+function onOverlayClick(e){if(e.target===document.getElementById('modal'))hideModal();}
+
+function saveItem() {
+    const title   = document.getElementById('f-title').value.trim();
+    const project = document.getElementById('f-project').value.trim();
+    if (!title)   { showMsg('Bitte Aufgabe ausfüllen.','info'); return; }
+    if (!project) { showMsg('Bitte Project Name ausfüllen.','info'); return; }
+
+    const data = {
+        project, title,
+        plant:       document.getElementById('f-plant').value.trim(),
+        detail:      document.getElementById('f-detail').value.trim(),
+        endTime:     document.getElementById('f-endtime').value,
+        status:      document.getElementById('f-status').value,
+        responsible: document.getElementById('f-responsible').value.trim()
+    };
+
+    if (editingId) {
+        const i = items.findIndex(x => x.id === editingId);
+        items[i] = { ...items[i], ...data };
+        showMsg('✔ Element aktualisiert.','success');
+    } else {
+        items.push({ id: nextId(), ...data });
+        showMsg('✔ Element hinzugefügt.','success');
+    }
+    save(); hideModal(); refreshFilters(); render();
+    if (document.getElementById('gantt-overlay').classList.contains('show')) renderGantt();
+}
+
+function exportGanttPDF() {
+    // Temporarily remove sticky positioning so all cells print at their natural position
+    const style = document.createElement('style');
+    style.id = 'print-fix';
+    style.textContent = '.gantt-table th,.gantt-table td{position:static!important}';
+    document.head.appendChild(style);
+    window.print();
+    // Remove the temp style after the print dialog closes
+    requestAnimationFrame(() => document.getElementById('print-fix')?.remove());
+}
+
+function confirmDelete(id) {
+    const t = items.find(x => x.id === id);
+    if (!confirm(`„${t?.title || 'Element'}" wirklich löschen?`)) return;
+    items = items.filter(x => x.id !== id);
+    save(); refreshFilters(); render();
+    showMsg('Element gelöscht.','success');
+}
+
+// ── Import / Export ──
+function exportJSON() {
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
+    download(blob, 'camera-projects-backup.json');
+    showMsg('Backup heruntergeladen.','success');
+}
+function importFile(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const isCSV = /\.(csv|txt)$/i.test(file.name);
+    const r = new FileReader();
+    r.onload = () => {
+        try {
+            const data = isCSV ? parseCSV(r.result) : JSON.parse(r.result);
+            if (!Array.isArray(data)) throw new Error('Ungültiges Format');
+            items = data.map((d, i) => ({ id: d.id ?? i + 1, ...d }));
+            save(); refreshFilters(); render();
+            showMsg(`✔ ${items.length} Einträge importiert.`,'success');
+        } catch (err) { showMsg('Import-Fehler: ' + err.message,'info'); }
+    };
+    r.readAsText(file);
+    e.target.value = '';
+}
+
+// Map a CSV header (German or English display name) to our internal field
+function mapHeader(h) {
+    const k = h.toLowerCase().replace(/\s|_/g,'');
+    if (/project/.test(k))                       return 'project';
+    if (/plant|werk/.test(k))                    return 'plant';
+    if (/aufgabe|task|title|titel/.test(k))      return 'title';
+    if (/detail|beschreib|description/.test(k))  return 'detail';
+    if (/end.?time|enddat|fällig|due|datum/.test(k)) return 'endTime';
+    if (/status/.test(k))                        return 'status';
+    if (/respons|verantwort|owner|zuständ/.test(k)) return 'responsible';
+    return null;
+}
+
+// Minimal RFC-4180 CSV parser (handles quotes, commas/newlines in fields)
+function parseCSV(text) {
+    text = text.replace(/^﻿/, '');                 // strip BOM
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i], n = text[i+1];
+        if (inQuotes) {
+            if (c === '"' && n === '"') { field += '"'; i++; }
+            else if (c === '"')         { inQuotes = false; }
+            else                        { field += c; }
+        } else {
+            if (c === '"')                       { inQuotes = true; }
+            else if (c === ',' || c === ';')     { row.push(field); field = ''; }
+            else if (c === '\r')                 { /* skip */ }
+            else if (c === '\n')                 { row.push(field); rows.push(row); row = []; field = ''; }
+            else                                 { field += c; }
+        }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    if (rows.length < 2) throw new Error('Keine Datenzeilen gefunden');
+
+    const headers = rows[0].map(mapHeader);
+    return rows.slice(1)
+        .filter(r => r.some(v => v.trim() !== ''))      // skip empty rows
+        .map(r => {
+            const obj = {};
+            headers.forEach((field, idx) => { if (field) obj[field] = (r[idx] || '').trim(); });
+            // normalise a parsed date to yyyy-mm-dd for the date input
+            if (obj.endTime) {
+                const d = new Date(obj.endTime);
+                if (!isNaN(d)) obj.endTime = d.toISOString().substring(0,10);
+            }
+            return obj;
+        })
+        .filter(o => o.title || o.project);             // need at least a task or project
+}
+function exportCSV() {
+    const cols = ['project','plant','title','detail','endTime','status','responsible'];
+    const head = ['Project Name','Plant','Aufgabe','Detail','End Time','Status','Responsible'];
+    // Replace newlines in Detail with " | " so each task stays on exactly one Excel row
+    const cell = (col, val) => {
+        let v = String(val ?? '');
+        if (col === 'detail') v = v.replace(/\r?\n/g, ' | ');
+        return '"' + v.replace(/"/g, '""') + '"';
+    };
+    const rows = items.map(t => cols.map(c => cell(c, t[c])).join(';'));
+    const head_row = head.map(h => '"' + h + '"').join(';');
+    const csv = '﻿' + [head_row, ...rows].join('\r\n');
+    download(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'camera-projects.csv');
+    showMsg('CSV heruntergeladen.','success');
+}
+function download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ── Init ──
+load();
+refreshFilters();
+render();
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        if (document.getElementById('gantt-overlay').classList.contains('show')) hideGantt();
+        else hideModal();
+    }
+});
+
+// ══════════════════════════════════════════════════
+//  GANTT CHART
+// ══════════════════════════════════════════════════
+let ganttOffset = 0; // weeks offset from today
+
+function showGantt() {
+    renderGantt();
+    document.getElementById('gantt-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';   // hide background page scrollbar
+}
+function hideGantt() {
+    document.getElementById('gantt-overlay').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+function ganttBarClass(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'process') return 'status-process';
+    if (s === 'open')    return 'status-open';
+    if (s === 'done')    return 'status-done';
+    if (s === 'urgent')  return 'status-urgent';
+    return 'status-other';
+}
+
+// ISO-8601 calendar week number + the Monday of that week
+function mondayOf(date) {
+    const d = new Date(date); d.setHours(0,0,0,0);
+    const day = (d.getDay() + 6) % 7;   // Mon=0 … Sun=6
+    d.setDate(d.getDate() - day);
+    return d;
+}
+function isoWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - day + 3);          // Thursday of this week
+    const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    const fday = (firstThursday.getUTCDay() + 6) % 7;
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - fday + 3);
+    return 1 + Math.round((d - firstThursday) / (7 * 86400000));
+}
+
+function renderGantt() {
+    const WEEKS = 52;                                // a full year of calendar weeks
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayMonday = mondayOf(today);
+
+    // Start 1 week before current week so recent past is visible; scroll right for the future
+    const startMonday = new Date(todayMonday);
+    startMonday.setDate(startMonday.getDate() - 1 * 7);
+
+    // Build week buckets
+    const weeks = [];
+    for (let i = 0; i < WEEKS; i++) {
+        const mon = new Date(startMonday);
+        mon.setDate(mon.getDate() + i * 7);
+        const sun = new Date(mon);
+        sun.setDate(sun.getDate() + 6);
+        weeks.push({ mon, sun, cw: isoWeek(mon) });
+    }
+
+    // Month header: span the weeks that fall in the same month (by the week's Monday)
+    const monthSpans = [];
+    let cur = null, count = 0;
+    weeks.forEach(w => {
+        const lbl = w.mon.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+        if (lbl === cur) count++;
+        else { if (cur) monthSpans.push({ lbl: cur, span: count }); cur = lbl; count = 1; }
+    });
+    monthSpans.push({ lbl: cur, span: count });
+
+    const monthHeaderCells = monthSpans.map(m =>
+        `<th colspan="${m.span}" style="background:#6264a7;color:white;border-right:2px solid #fff">${m.lbl}</th>`
+    ).join('');
+
+    const todayCW = isoWeek(today), todayYr = today.getFullYear();
+    const cwHeaderCells = weeks.map(w => {
+        const isThisWeek = w.cw === todayCW && w.mon.getFullYear() === todayYr;
+        const dateRange = `${w.mon.getDate()}.${w.mon.getMonth()+1}.`;
+        return `<th class="${isThisWeek ? 'today-line' : ''}" style="font-size:11px;padding:5px 2px">
+            <div style="font-weight:700">CW ${w.cw}</div>
+            <div style="font-size:9px;font-weight:400;opacity:.7;margin-top:1px">${dateRange}</div></th>`;
+    }).join('');
+
+    // Group items by project
+    const groups = new Map();
+    items.forEach(t => {
+        const k = t.project || '(Kein Projekt)';
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(t);
+    });
+
+    const rangeStart = weeks[0].mon.getTime();
+    const rangeEnd   = weeks[WEEKS-1].sun.getTime();
+
+    let bodyRows = '';
+    groups.forEach((tasks, project) => {
+        bodyRows += `<tr class="gantt-project-row">
+            <td class="col-info gantt-project-info">${esc(project)}
+                <span style="background:#6264a7;color:white;border-radius:10px;padding:1px 8px;font-size:12px;font-weight:400;margin-left:6px">${tasks.length}</span>
+            </td><td class="gantt-project-fill" colspan="${WEEKS}"></td></tr>`;
+
+        tasks.forEach(t => {
+            const hasEnd = t.endTime && !isNaN(new Date(t.endTime));
+            const endDate = hasEnd ? new Date(t.endTime) : null;
+            if (endDate) endDate.setHours(0,0,0,0);
+
+            // Bar spans from "today" (or range start if today is earlier) to the end date
+            let firstWeek = -1, lastWeek = -1;
+            if (endDate && endDate.getTime() >= rangeStart && (today.getTime() <= rangeEnd)) {
+                const barStart = today.getTime() < rangeStart ? new Date(rangeStart) : today;
+                weeks.forEach((w, i) => {
+                    const ws = w.mon.getTime(), we = w.sun.getTime();
+                    if (barStart.getTime() <= we && endDate.getTime() >= ws) {
+                        if (firstWeek === -1) firstWeek = i;
+                        lastWeek = i;
+                    }
+                });
+            }
+
+            const barCls = ganttBarClass(t.status);
+            const tip = `${esc(t.title)}${t.endTime ? ' — ' + esc(t.endTime) : ''}`;
+            const weekCells = weeks.map((w, i) => {
+                const isThisWeek = w.cw === todayCW && w.mon.getFullYear() === todayYr;
+                const bg = isThisWeek ? 'background:#fde8d8' : '';
+                if (firstWeek >= 0 && i >= firstWeek && i <= lastWeek) {
+                    const isFirst = i === firstWeek, isLast = i === lastWeek;
+                    const radius = `border-radius:${isFirst?'4px':'0'} ${isLast?'4px':'0'} ${isLast?'4px':'0'} ${isFirst?'4px':'0'}`;
+                    return `<td class="week-cell" style="${bg};padding:0">
+                        <div class="gantt-bar ${barCls}" title="${tip}"
+                             style="position:relative;height:18px;width:100%;${radius}"></div></td>`;
+                }
+                return `<td class="week-cell" style="${bg}"></td>`;
+            }).join('');
+
+            const statusBadge = t.status
+                ? `<span class="badge ${statusClass(t.status)}" style="font-size:11px;padding:1px 7px">${esc(t.status)}</span>` : '';
+            const endLbl = t.endTime ? fmtDate(t.endTime) : '–';
+            const rowHide = ganttHiddenStatuses.has(t.status || '') ? ' style="display:none"' : '';
+            bodyRows += `<tr class="gantt-task-row" data-status="${esc(t.status||'')}" title="Zum Bearbeiten klicken" onclick="openModal(${t.id})"${rowHide}>
+                <td class="col-info">
+                    <div style="font-size:13px;font-weight:500;line-height:1.3">${esc(t.title)}</div>
+                    <div style="font-size:11px;color:#605e5c;margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                        ${statusBadge}
+                        ${t.responsible ? `<span>${esc(t.responsible)}</span>` : ''}
+                        ${t.endTime ? `<span style="color:#8a8886">🏁 ${endLbl}</span>` : ''}
+                    </div>
+                </td>${weekCells}</tr>`;
+        });
+    });
+
+    // Legend bar (outside scrollable area)
+    const legendStatuses = [
+        { key: 'Process', color: '#6264a7' },
+        { key: 'open',    color: '#f0a070' },
+        { key: 'done',    color: '#55a86a' },
+        { key: 'Urgent',  color: '#d73b02' },
+    ];
+    document.getElementById('gantt-legend-bar').innerHTML = `
+        <span style="font-weight:600;font-size:13px;color:#605e5c">Status:</span>
+        ${legendStatuses.map(s => `
+        <span class="gantt-legend-item${ganttHiddenStatuses.has(s.key) ? ' inactive' : ''}"
+              data-status="${s.key}" onclick="toggleGanttStatus('${s.key}')"
+              title="${s.key} ein-/ausblenden">
+            <span class="gantt-legend-dot" style="background:${s.color}"></span>${s.key}
+        </span>`).join('')}
+        <span style="margin-left:12px;font-size:12px;color:#8a8886">Balken = heute → Endtermin &nbsp;|&nbsp; orange KW = aktuelle Woche &nbsp;|&nbsp; horizontal scrollen für mehr Wochen</span>`;
+
+    const cols = `<col>` + weeks.map(()=>`<col style="width:58px;min-width:58px">`).join('');
+
+    document.getElementById('gantt-content').innerHTML = `
+    <table class="gantt-table">
+        <colgroup>${cols}</colgroup>
+        <thead>
+            <tr><th class="col-info" rowspan="2">Aufgabe</th>${monthHeaderCells}</tr>
+            <tr>${cwHeaderCells}</tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+    </table>`;
+
+    // Pin the 2nd header row right below the 1st, and project bands below the whole header
+    requestAnimationFrame(() => {
+        const table = document.querySelector('#gantt-content .gantt-table');
+        if (!table) return;
+        const row1 = table.querySelector('thead tr:first-child');
+        const h1 = row1 ? row1.offsetHeight : 30;
+        table.querySelectorAll('thead tr:last-child th').forEach(th => { th.style.top = h1 + 'px'; });
+        const headH = table.querySelector('thead').offsetHeight;
+        table.querySelectorAll('.gantt-project-row td').forEach(td => { td.style.top = headH + 'px'; });
+    });
+
+    // Re-apply hidden-status visibility after re-render
+    ganttHiddenStatuses.forEach(s => {
+        document.querySelectorAll(`.gantt-task-row[data-status="${s}"]`).forEach(tr => tr.style.display = 'none');
+    });
+
+    // Scroll so that the current week (2nd column) is visible near the left
+    requestAnimationFrame(() => {
+        const scroll = document.getElementById('gantt-scroll');
+        const todayTh = scroll.querySelector('th.today-line');
+        if (todayTh) {
+            const offset = todayTh.offsetLeft - 260 - 20; // minus info-col width and a small margin
+            scroll.scrollLeft = Math.max(0, offset);
+        }
+    });
+}
+</script>
+
+<!-- Gantt Overlay -->
+<div id="gantt-overlay">
+    <div id="gantt-header">
+        <h2>📅 Gantt-Diagramm</h2>
+        <span style="font-size:13px;opacity:.8">← → zum Scrollen</span>
+        <button id="gantt-new" onclick="openModal(null)">+ Neues Element</button>
+        <button id="gantt-export" onclick="exportGanttPDF()">⬇ PDF Export</button>
+        <button id="gantt-close" onclick="hideGantt()">✕ Schließen</button>
+    </div>
+    <div id="gantt-body">
+        <div id="gantt-legend-bar"></div>
+        <div id="gantt-scroll">
+            <div id="gantt-content" style="padding:0 28px 0 0"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
