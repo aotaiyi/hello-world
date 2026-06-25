@@ -267,9 +267,13 @@
 // ════════════════════════════════════════════════
 //  SharePoint REST API backend
 // ════════════════════════════════════════════════
-const SITE_URL  = 'https://vawuppertal.sharepoint.com/sites/CameraProject';
+// Auto-detect site URL when hosted inside SharePoint, fallback to hardcoded
+const SITE_URL  = (location.hostname.includes('sharepoint.com'))
+    ? location.origin + location.pathname.split('/').slice(0, 3).join('/')
+    : 'https://vawuppertal.sharepoint.com/sites/CameraProject';
 const LIST_NAME = 'Camera System Projects';
-const API_BASE  = `${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items`;
+// Do NOT encodeURIComponent here — fetch handles encoding; double-encoding breaks the API
+const API_BASE  = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items`;
 
 let items = [];
 let editingId = null;
@@ -305,10 +309,13 @@ function localToSP(item) {
 async function getDigest() {
     const r = await fetch(`${SITE_URL}/_api/contextinfo`, {
         method: 'POST',
-        headers: { 'Accept': 'application/json;odata=nometadata' },
+        headers: {
+            'Accept': 'application/json;odata=nometadata',
+            'Content-Type': 'application/json;odata=nometadata'
+        },
         credentials: 'include'
     });
-    if (!r.ok) throw new Error('Authentifizierung fehlgeschlagen. Bitte bei SharePoint anmelden.');
+    if (!r.ok) throw new Error(`Authentifizierung fehlgeschlagen (${r.status}). Bitte bei SharePoint anmelden.`);
     const data = await r.json();
     return data.FormDigestValue;
 }
@@ -330,10 +337,11 @@ async function load() {
             credentials: 'include'
         });
         if (r.status === 401 || r.status === 403) {
-            showMsg('⚠ Bitte zuerst bei SharePoint anmelden: <a href="' + SITE_URL + '" target="_blank">SharePoint öffnen</a>', 'error');
+            showMsg('⚠ Zugriff verweigert. Bitte zuerst <a href="' + SITE_URL + '" target="_blank">SharePoint öffnen</a> und anmelden.', 'error');
             items = [];
         } else if (!r.ok) {
-            throw new Error(`HTTP ${r.status}`);
+            const txt = await r.text().catch(()=>'');
+            throw new Error(`HTTP ${r.status} — ${txt.substring(0,120)}`);
         } else {
             const data = await r.json();
             items = data.value.map(spToLocal);
