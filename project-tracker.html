@@ -121,9 +121,10 @@
     #gantt-header { background: #6264a7; color: white; padding: 14px 28px;
         display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-shrink: 0; }
     #gantt-header h2 { font-size: 18px; font-weight: 600; flex: 1; }
-    #gantt-close { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
+    #gantt-close, #gantt-new { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
         padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-    #gantt-close:hover { background: rgba(255,255,255,0.15); }
+    #gantt-close:hover, #gantt-new:hover { background: rgba(255,255,255,0.15); }
+    #gantt-new { background: rgba(255,255,255,0.2); font-weight: 600; }
 
     #gantt-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     #gantt-legend-bar { padding: 10px 28px; display: flex; gap: 16px;
@@ -762,6 +763,7 @@ function renderGantt() {
     <div id="gantt-header">
         <h2>📅 Gantt-Diagramm</h2>
         <span style="font-size:13px;opacity:.8">← → zum Scrollen</span>
+        <button id="gantt-new" onclick="openModal(null)">+ Neues Element</button>
         <button id="gantt-close" onclick="hideGantt()">✕ Schließen</button>
     </div>
     <div id="gantt-body">
