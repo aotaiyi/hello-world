@@ -83,7 +83,7 @@
 
     .empty { text-align: center; padding: 60px; color: #605e5c; font-size: 14px; background: white; border-radius: 4px; }
 
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400;
         align-items: center; justify-content: center; }
     .modal-overlay.show { display: flex; }
     .modal { background: white; border-radius: 8px; padding: 32px; width: 520px; max-width: 95vw;
@@ -159,6 +159,7 @@
         white-space: nowrap; }
     .gantt-project-row td.gantt-project-fill { position: sticky; top: 0; z-index: 3; }
     .gantt-project-row:hover td { background: #e8e7f5 !important; }
+    .gantt-task-row { cursor: pointer; }
 
     .gantt-bar-cell { position: relative; }
     .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%);
@@ -457,6 +458,7 @@ function saveItem() {
         showMsg('✔ Element hinzugefügt.','success');
     }
     save(); hideModal(); refreshFilters(); render();
+    if (document.getElementById('gantt-overlay').classList.contains('show')) renderGantt();
 }
 
 function confirmDelete(id) {
@@ -710,7 +712,7 @@ function renderGantt() {
             const statusBadge = t.status
                 ? `<span class="badge ${statusClass(t.status)}" style="font-size:11px;padding:1px 7px">${esc(t.status)}</span>` : '';
             const endLbl = t.endTime ? fmtDate(t.endTime) : '–';
-            bodyRows += `<tr>
+            bodyRows += `<tr class="gantt-task-row" title="Zum Bearbeiten klicken" onclick="openModal(${t.id})">
                 <td class="col-info">
                     <div style="font-size:13px;font-weight:500;line-height:1.3">${esc(t.title)}</div>
                     <div style="font-size:11px;color:#605e5c;margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
