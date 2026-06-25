@@ -133,17 +133,17 @@
 
     /* sticky left column while horizontal-scrolling */
     .gantt-table { border-collapse: separate; border-spacing: 0; background: white;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1); table-layout: fixed; width: max-content; min-width: 100%; }
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1); table-layout: auto; width: max-content; min-width: 100%; }
     .gantt-table th { background: #faf9f8; padding: 8px 4px; font-size: 11px; font-weight: 600;
         color: #605e5c; border-bottom: 2px solid #edebe9; border-right: 1px solid #edebe9;
         white-space: nowrap; text-align: center; }
-    .gantt-table th.col-info { text-align: left; width: 240px; min-width: 240px; padding: 8px 14px;
+    .gantt-table th.col-info { text-align: left; padding: 8px 14px;
         vertical-align: middle; position: sticky; left: 0; z-index: 3;
-        background: #faf9f8; border-right: 2px solid #c8c6c4; }
+        background: #faf9f8; border-right: 2px solid #c8c6c4; white-space: nowrap; }
     .gantt-table td { padding: 7px 4px; border-bottom: 1px solid #f3f2f1; border-right: 1px solid #f3f2f1;
         font-size: 13px; vertical-align: middle; }
-    .gantt-table td.col-info { width: 240px; min-width: 240px; padding: 7px 14px;
-        word-break: break-word; position: sticky; left: 0; z-index: 2;
+    .gantt-table td.col-info { padding: 7px 14px;
+        white-space: nowrap; position: sticky; left: 0; z-index: 2;
         background: white; border-right: 2px solid #c8c6c4; }
     .gantt-table td.week-cell { width: 58px; min-width: 58px; text-align: center; padding: 4px 2px; }
     .gantt-table tr:last-child td { border-bottom: none; }
@@ -730,7 +730,7 @@ function renderGantt() {
         <span class="gantt-legend-item"><span class="gantt-legend-dot" style="background:#d73b02"></span>Urgent</span>
         <span style="margin-left:12px;font-size:12px;color:#8a8886">Balken = heute → Endtermin &nbsp;|&nbsp; orange KW = aktuelle Woche &nbsp;|&nbsp; horizontal scrollen für mehr Wochen</span>`;
 
-    const cols = `<col style="width:240px;min-width:240px">` + weeks.map(()=>`<col style="width:58px;min-width:58px">`).join('');
+    const cols = `<col>` + weeks.map(()=>`<col style="width:58px;min-width:58px">`).join('');
 
     document.getElementById('gantt-content').innerHTML = `
     <table class="gantt-table">
