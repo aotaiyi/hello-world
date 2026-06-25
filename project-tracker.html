@@ -216,9 +216,11 @@
         <div class="modal-title" id="modal-title">Neues Element</div>
         <div class="form-row">
             <div class="form-group"><label class="required">Project Name</label>
-                <input type="text" id="f-project" placeholder="z.B. Eldisy, Multistation …"></div>
+                <input type="text" id="f-project" list="dl-project" placeholder="z.B. Eldisy, Multistation …" autocomplete="off">
+                <datalist id="dl-project"></datalist></div>
             <div class="form-group"><label>Plant</label>
-                <input type="text" id="f-plant" placeholder="VAT / VAC / VAM …"></div>
+                <input type="text" id="f-plant" list="dl-plant" placeholder="VAT / VAC / VAM …" autocomplete="off">
+                <datalist id="dl-plant"></datalist></div>
         </div>
         <div class="form-group"><label class="required">Aufgabe</label>
             <input type="text" id="f-title" placeholder="Aufgabenbeschreibung"></div>
@@ -422,6 +424,8 @@ function openModal(id) {
     editingId = id ?? null;
     document.getElementById('modal-title').textContent = editingId ? 'Element bearbeiten' : 'Neues Element';
     const t = editingId ? items.find(x => x.id === editingId) : {};
+    fillDatalist('dl-project', items.map(x => x.project));
+    fillDatalist('dl-plant',   items.map(x => x.plant));
     document.getElementById('f-project').value     = t.project || '';
     document.getElementById('f-plant').value       = t.plant || '';
     document.getElementById('f-title').value       = t.title || '';
@@ -431,6 +435,10 @@ function openModal(id) {
     document.getElementById('f-responsible').value = t.responsible || '';
     document.getElementById('modal').classList.add('show');
     document.getElementById('f-project').focus();
+}
+function fillDatalist(id, values) {
+    const uniq = [...new Set(values.map(v => (v || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    document.getElementById(id).innerHTML = uniq.map(v => `<option value="${esc(v)}">`).join('');
 }
 function hideModal(){document.getElementById('modal').classList.remove('show');editingId=null;}
 function onOverlayClick(e){if(e.target===document.getElementById('modal'))hideModal();}
