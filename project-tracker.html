@@ -121,11 +121,10 @@
     #gantt-header { background: #6264a7; color: white; padding: 14px 28px;
         display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-shrink: 0; }
     #gantt-header h2 { font-size: 18px; font-weight: 600; flex: 1; }
-    #gantt-close, #gantt-new { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
+    #gantt-close, #gantt-new, #gantt-export { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6);
         padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
     #gantt-close:hover, #gantt-new:hover, #gantt-export:hover { background: rgba(255,255,255,0.15); }
     #gantt-new    { background: rgba(255,255,255,0.2); font-weight: 600; }
-    #gantt-export { background: rgba(255,255,255,0.1); }
 
     @media print {
         /* Hide everything except the Gantt table */
@@ -140,8 +139,15 @@
         .gantt-table                  { width: max-content !important; }
         .gantt-table th,
         .gantt-table td               { position: static !important; }
+        /* Force the colored bars / status backgrounds to print */
+        .gantt-overlay, #gantt-content, .gantt-table,
+        .gantt-bar, .gantt-table td, .gantt-table th,
+        .gantt-project-row td, .badge {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
         /* Apply hidden-status filtering: rows hidden via inline style stay hidden */
-        @page { size: A3 landscape; margin: 10mm; }
+        @page { size: A0 landscape; margin: 10mm; }
     }
 
     #gantt-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
