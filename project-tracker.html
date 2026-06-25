@@ -41,15 +41,6 @@
     .message { padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
     .message.success { background: #d4f0e0; color: #0f6b35; border-left: 4px solid #107c10; }
     .message.info    { background: #dce6f9; color: #1a56a0; border-left: 4px solid #1a56a0; }
-    .message.error   { background: #fde8d8; color: #d73b02; border-left: 4px solid #d73b02; }
-
-    .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7);
-        z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
-    .loading-overlay.show { display: flex; }
-    .spinner { width: 40px; height: 40px; border: 4px solid #edebe9; border-top-color: #6264a7;
-        border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-size: 14px; color: #605e5c; }
 
     .project-count { background: #6264a7; color: white; border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: 400; margin-left: 4px; }
     .chevron { font-size: 11px; color: #605e5c; margin-right: 6px; }
@@ -113,7 +104,6 @@
     .btn-save { background: #6264a7; color: white; border: none; padding: 8px 20px; border-radius: 4px;
         cursor: pointer; font-size: 14px; font-weight: 600; }
     .btn-save:hover { background: #585a96; }
-    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-cancel { background: white; color: #323130; border: 1px solid #c8c6c4; padding: 8px 20px;
         border-radius: 4px; cursor: pointer; font-size: 14px; }
     .btn-cancel:hover { background: #f3f2f1; }
@@ -124,7 +114,6 @@
         th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { display: none; }
     }
 
-    /* ── Gantt view ── */
     #gantt-overlay { display: none; position: fixed; inset: 0; background: #f3f2f1;
         z-index: 300; flex-direction: column; overflow: hidden; }
     #gantt-overlay.show { display: flex; }
@@ -147,31 +136,25 @@
         #gantt-content                { padding: 0 !important; }
         .gantt-table                  { width: max-content !important; }
         .gantt-table th, .gantt-table td { position: static !important; }
-        .gantt-overlay, #gantt-content, .gantt-table,
-        .gantt-bar, .gantt-table td, .gantt-table th,
-        .gantt-project-row td, .badge {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
+        .gantt-bar, .gantt-table td, .gantt-table th, .gantt-project-row td, .badge {
+            -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         @page { size: A0 landscape; margin: 10mm; }
     }
 
     #gantt-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     #gantt-legend-bar { padding: 10px 28px; display: flex; gap: 16px;
         align-items: center; font-size: 13px; flex-wrap: wrap; background: #f3f2f1; flex-shrink: 0; }
-    #gantt-scroll { flex: 1; overflow: auto; padding: 0; }
+    #gantt-scroll { flex: 1; overflow: auto; }
     .gantt-table { border-collapse: separate; border-spacing: 0; background: white;
         box-shadow: 0 1px 4px rgba(0,0,0,0.1); table-layout: auto; width: max-content; min-width: 100%; }
     .gantt-table th { background: #faf9f8; padding: 8px 4px; font-size: 11px; font-weight: 600;
         color: #605e5c; border-bottom: 2px solid #edebe9; border-right: 1px solid #edebe9;
         white-space: nowrap; text-align: center; position: sticky; top: 0; z-index: 5; }
-    .gantt-table th.col-info { text-align: left; padding: 8px 14px;
-        vertical-align: middle; position: sticky; left: 0; top: 0; z-index: 7;
+    .gantt-table th.col-info { text-align: left; padding: 8px 14px; position: sticky; left: 0; top: 0; z-index: 7;
         background: #faf9f8; border-right: 2px solid #c8c6c4; white-space: nowrap; }
     .gantt-table td { padding: 7px 4px; border-bottom: 1px solid #f3f2f1; border-right: 1px solid #f3f2f1;
         font-size: 13px; vertical-align: middle; }
-    .gantt-table td.col-info { padding: 7px 14px;
-        white-space: nowrap; position: sticky; left: 0; z-index: 2;
+    .gantt-table td.col-info { padding: 7px 14px; white-space: nowrap; position: sticky; left: 0; z-index: 2;
         background: white; border-right: 2px solid #c8c6c4; }
     .gantt-table td.week-cell { width: 58px; min-width: 58px; text-align: center; padding: 4px 2px; }
     .gantt-table tr:last-child td { border-bottom: none; }
@@ -182,18 +165,13 @@
         background: #f0eff9; border-left: 4px solid #6264a7; border-right: 2px solid #c8c6c4; white-space: nowrap; }
     .gantt-project-row:hover td { background: #e8e7f5 !important; }
     .gantt-task-row { cursor: pointer; }
-    .gantt-bar-cell { position: relative; }
-    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%);
-        height: 16px; border-radius: 3px; min-width: 4px; }
-    .gantt-bar.status-process { background: #6264a7; }
-    .gantt-bar.status-open    { background: #f0a070; }
-    .gantt-bar.status-done    { background: #55a86a; }
-    .gantt-bar.status-urgent  { background: #d73b02; }
-    .gantt-bar.status-other   { background: #a0a0a0; }
+    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 16px; border-radius: 3px; min-width: 4px; }
+    .gantt-bar.status-process { background: #6264a7; } .gantt-bar.status-open { background: #f0a070; }
+    .gantt-bar.status-done { background: #55a86a; } .gantt-bar.status-urgent { background: #d73b02; }
+    .gantt-bar.status-other { background: #a0a0a0; }
     .today-line { background: #d73b02 !important; }
-    .gantt-legend-item { display: flex; align-items: center; gap: 6px;
-        cursor: pointer; user-select: none; padding: 3px 8px; border-radius: 4px;
-        border: 2px solid transparent; transition: opacity .15s, border-color .15s; }
+    .gantt-legend-item { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;
+        padding: 3px 8px; border-radius: 4px; border: 2px solid transparent; transition: opacity .15s, border-color .15s; }
     .gantt-legend-item:hover { border-color: rgba(0,0,0,0.15); }
     .gantt-legend-item.inactive { opacity: 0.38; }
     .gantt-legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
@@ -201,18 +179,15 @@
 </head>
 <body>
 
-<!-- Loading overlay -->
-<div class="loading-overlay" id="loading-overlay">
-    <div class="spinner"></div>
-    <div class="loading-text" id="loading-text">Laden…</div>
-</div>
-
 <header>
     <h1>📷 Camera System Projects</h1>
     <div class="header-actions">
+        <button class="btn-ghost" onclick="exportJSON()">⬇ Backup (JSON)</button>
+        <button class="btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import (JSON/CSV)</button>
         <button class="btn-ghost" onclick="exportCSV()">📊 CSV (Excel)</button>
         <button class="btn-ghost" onclick="showGantt()">📅 Gantt</button>
         <button class="btn-primary" onclick="openModal()">+ Neues Element</button>
+        <input type="file" id="import-file" accept=".json,.csv,.txt" style="display:none" onchange="importFile(event)">
     </div>
 </header>
 
@@ -264,99 +239,50 @@
 </div>
 
 <script>
-// ════════════════════════════════════════════════
-//  SharePoint REST API backend
-// ════════════════════════════════════════════════
-// Auto-detect site URL when hosted inside SharePoint, fallback to hardcoded
-const SITE_URL  = (location.hostname.includes('sharepoint.com'))
-    ? location.origin + location.pathname.split('/').slice(0, 3).join('/')
-    : 'https://vawuppertal.sharepoint.com/sites/CameraProject';
-const LIST_NAME = 'Camera System Projects';
-// Do NOT encodeURIComponent here — fetch handles encoding; double-encoding breaks the API
-const API_BASE  = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items`;
-
+const STORAGE_KEY = 'cameraSystemProjects.v1';
 let items = [];
 let editingId = null;
 const ganttHiddenStatuses = new Set();
 
-// ── SharePoint field mapping ──
-function spToLocal(sp) {
-    return {
-        id:          sp.Id,
-        project:     sp.ProjectName  || '',
-        plant:       sp.Plant        || '',
-        title:       sp.Title        || '',
-        detail:      sp.Detail       || '',
-        endTime:     sp.EndTime ? sp.EndTime.substring(0, 10) : '',
-        status:      sp.Status       || '',
-        responsible: sp.Responsible  || ''
-    };
-}
+const SEED = [
+    { project:'VorwerkCam', plant:'VAT', title:'3D-own Camera System develop',
+      detail:'- AI Model - done\n- Model Training Software - 1. draft - CW26\n- Production Software - in Oct.',
+      endTime:'', status:'Process', responsible:'Li, Wenxiang' },
+    { project:'Multistation', plant:'VAT', title:'Multistation AI Model Training',
+      detail:'', endTime:'2026-06-26', status:'Process', responsible:'Warspite Huang' },
+    { project:'Multistation', plant:'VAT', title:'Multistaiton Camera Workflow set up',
+      detail:'', endTime:'2026-07-03', status:'Process', responsible:'Warspite Huang' },
+    { project:'Multistation', plant:'VAC', title:'Mulistation Camera System installation training',
+      detail:'- install\n- software workflow', endTime:'', status:'open', responsible:'Mandic, Vule' },
+    { project:'Multistation', plant:'VAC', title:'Multistation Camera System in VAC support',
+      detail:'', endTime:'', status:'open', responsible:'Maki, Mohamed' },
+    { project:'Eldisy', plant:'Eldisy', title:'Change the Machine',
+      detail:'Build the Camera System on the machine', endTime:'2026-06-30', status:'Process', responsible:'Moellmann, Andre' },
+    { project:'Eldisy', plant:'Eldisy', title:'Camera Program set up',
+      detail:'', endTime:'', status:'open', responsible:'Li, Wenxiang' },
+    { project:'2300213', plant:'VAM', title:'VAM order the Machine',
+      detail:'Turn table with three Station', endTime:'2026-06-30', status:'Process', responsible:'Serna, Alejandro' },
+    { project:'2300213', plant:'VAM', title:'Order Hanswell Camera System',
+      detail:'quote already got from Hanswell', endTime:'2026-06-30', status:'Process', responsible:'Serna, Alejandro' },
+    { project:'2300213', plant:'VAM', title:'prepare some NG and OK parts',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+    { project:'2300213', plant:'VAM', title:'take picture for the NG and OK parts on Machine',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+    { project:'2300213', plant:'VAM', title:'AI Model training for 2300213',
+      detail:'', endTime:'', status:'open', responsible:'Gonzalez, Cuauhtem' },
+    { project:'17443', plant:'VAT', title:'Order the Machine from Reao',
+      detail:'Purchasing request already started', endTime:'2026-06-30', status:'Process', responsible:'Li, Wenxiang' },
+];
 
-function localToSP(item) {
-    return {
-        Title:       item.title,
-        ProjectName: item.project,
-        Plant:       item.plant,
-        Detail:      item.detail,
-        EndTime:     item.endTime || null,
-        Status:      item.status,
-        Responsible: item.responsible
-    };
+function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { try { items = JSON.parse(raw); return; } catch (_) {} }
+    items = SEED.map((s, i) => ({ id: i + 1, ...s }));
+    save();
 }
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+function nextId() { return items.length ? Math.max(...items.map(t => t.id)) + 1 : 1; }
 
-// ── Auth digest (needed for write operations) ──
-async function getDigest() {
-    const r = await fetch(`${SITE_URL}/_api/contextinfo`, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json;odata=nometadata',
-            'Content-Type': 'application/json;odata=nometadata'
-        },
-        credentials: 'include'
-    });
-    if (!r.ok) throw new Error(`Authentifizierung fehlgeschlagen (${r.status}). Bitte bei SharePoint anmelden.`);
-    const data = await r.json();
-    return data.FormDigestValue;
-}
-
-// ── Loading indicator ──
-function showLoading(on, text) {
-    const el = document.getElementById('loading-overlay');
-    if (text) document.getElementById('loading-text').textContent = text;
-    el.classList.toggle('show', on);
-}
-
-// ── Load all items from SharePoint ──
-async function load() {
-    showLoading(true, 'Daten werden geladen…');
-    try {
-        const url = `${API_BASE}?$select=Id,Title,ProjectName,Plant,Detail,EndTime,Status,Responsible&$orderby=Id asc&$top=500`;
-        const r = await fetch(url, {
-            headers: { 'Accept': 'application/json;odata=nometadata' },
-            credentials: 'include'
-        });
-        if (r.status === 401 || r.status === 403) {
-            showMsg('⚠ Zugriff verweigert. Bitte zuerst <a href="' + SITE_URL + '" target="_blank">SharePoint öffnen</a> und anmelden.', 'error');
-            items = [];
-        } else if (!r.ok) {
-            const txt = await r.text().catch(()=>'');
-            throw new Error(`HTTP ${r.status} — ${txt.substring(0,120)}`);
-        } else {
-            const data = await r.json();
-            items = data.value.map(spToLocal);
-        }
-    } catch(e) {
-        showMsg('Fehler beim Laden: ' + e.message, 'error');
-        items = [];
-    } finally {
-        showLoading(false);
-    }
-    refreshFilters();
-    render();
-}
-
-// ── Helpers ──
 function plantClass(p){switch((p||'').toLowerCase()){case'vat':return'plant-vat';case'vac':return'plant-vac';
     case'vam':return'plant-vam';case'eldisy':return'plant-eldisy';default:return'plant-other';}}
 function statusClass(s){switch((s||'').toLowerCase()){case'process':return'status-process';case'open':return'status-open';
@@ -365,21 +291,16 @@ function fmtDate(d){if(!d)return'–';const dt=new Date(d);return isNaN(dt)?esc(
     dt.toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'});}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function showMsg(t, type='info'){const el=document.getElementById('msg-area');
-    el.innerHTML=`<div class="message ${type}">${t}</div>`;
-    if(type!=='error') setTimeout(()=>el.innerHTML='',5000);}
+function showMsg(t,type='info'){const el=document.getElementById('msg-area');
+    el.innerHTML=`<div class="message ${type}">${t}</div>`;setTimeout(()=>el.innerHTML='',4000);}
 
-// ── Render ──
 function refreshFilters() {
-    const sel = document.getElementById('filter-project');
-    const cur = sel.value;
+    const sel = document.getElementById('filter-project'), cur = sel.value;
     const projects = [...new Set(items.map(t => t.project).filter(Boolean))].sort();
     sel.innerHTML = '<option value="">Alle Projekte</option>' +
         projects.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
     sel.value = cur;
-
-    const ssel = document.getElementById('filter-status');
-    const scur = ssel.value;
+    const ssel = document.getElementById('filter-status'), scur = ssel.value;
     const statuses = [...new Set(items.map(t => t.status).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
     ssel.innerHTML = '<option value="">Alle Status</option>' +
         statuses.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
@@ -387,12 +308,11 @@ function refreshFilters() {
 }
 
 function renderStats() {
-    const total = items.length;
-    const open  = items.filter(t => (t.status||'').toLowerCase()==='open').length;
-    const proc  = items.filter(t => (t.status||'').toLowerCase()==='process').length;
-    const done  = items.filter(t => (t.status||'').toLowerCase()==='done').length;
-    const projects = new Set(items.map(t => t.project).filter(Boolean)).size;
-    document.getElementById('stats').innerHTML = `
+    const total=items.length, open=items.filter(t=>(t.status||'').toLowerCase()==='open').length;
+    const proc=items.filter(t=>(t.status||'').toLowerCase()==='process').length;
+    const done=items.filter(t=>(t.status||'').toLowerCase()==='done').length;
+    const projects=new Set(items.map(t=>t.project).filter(Boolean)).size;
+    document.getElementById('stats').innerHTML=`
         <div class="stat-card"><div class="num">${total}</div><div class="lbl">Aufgaben</div></div>
         <div class="stat-card"><div class="num">${projects}</div><div class="lbl">Projekte</div></div>
         <div class="stat-card"><div class="num" style="color:#d73b02">${open}</div><div class="lbl">open</div></div>
@@ -402,34 +322,26 @@ function renderStats() {
 
 function render() {
     renderStats();
-    const q  = document.getElementById('search').value.toLowerCase().trim();
-    const fp = document.getElementById('filter-project').value;
-    const fs = document.getElementById('filter-status').value.toLowerCase();
-    const hideDone = document.getElementById('hide-done').checked;
-
-    const filtered = items.filter(t => {
-        const mq = !q || [t.title,t.project,t.detail,t.plant,t.responsible]
-            .some(v => String(v||'').toLowerCase().includes(q));
-        const mp = !fp || t.project === fp;
-        const ms = !fs || String(t.status||'').toLowerCase() === fs;
-        const md = !hideDone || String(t.status||'').toLowerCase() !== 'done';
-        return mq && mp && ms && md;
+    const q=document.getElementById('search').value.toLowerCase().trim();
+    const fp=document.getElementById('filter-project').value;
+    const fs=document.getElementById('filter-status').value.toLowerCase();
+    const hideDone=document.getElementById('hide-done').checked;
+    const filtered=items.filter(t=>{
+        const mq=!q||[t.title,t.project,t.detail,t.plant,t.responsible].some(v=>String(v||'').toLowerCase().includes(q));
+        return mq&&(!fp||t.project===fp)&&(!fs||String(t.status||'').toLowerCase()===fs)&&(!hideDone||String(t.status||'').toLowerCase()!=='done');
     });
-
-    const container = document.getElementById('task-list');
-    if (!filtered.length) { container.innerHTML = '<div class="empty">Keine Einträge gefunden.</div>'; return; }
-
-    const groups = new Map();
-    filtered.forEach(t => { const k=t.project||'(Kein Projekt)'; if(!groups.has(k))groups.set(k,[]); groups.get(k).push(t); });
-
-    const gid = g => g.replace(/[^a-z0-9]/gi,'_');
-    let bodyRows = '';
-    groups.forEach((tasks, project) => {
-        const key = gid(project);
-        bodyRows += `<tr class="group-hdr" onclick="toggleGroup('${key}')">
+    const container=document.getElementById('task-list');
+    if(!filtered.length){container.innerHTML='<div class="empty">Keine Einträge gefunden.</div>';return;}
+    const groups=new Map();
+    filtered.forEach(t=>{const k=t.project||'(Kein Projekt)';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(t);});
+    const gid=g=>g.replace(/[^a-z0-9]/gi,'_');
+    let bodyRows='';
+    groups.forEach((tasks,project)=>{
+        const key=gid(project);
+        bodyRows+=`<tr class="group-hdr" onclick="toggleGroup('${key}')">
             <td colspan="7"><span class="chevron" id="chv-${key}">▼</span>
             ${esc(project)} <span class="project-count">${tasks.length}</span></td></tr>`;
-        bodyRows += tasks.map(t => `
+        bodyRows+=tasks.map(t=>`
             <tr class="task-row" data-grp="${key}">
                 <td>${t.plant?`<span class="badge ${plantClass(t.plant)}">${esc(t.plant)}</span>`:'–'}</td>
                 <td class="task-name">${esc(t.title)||'–'}</td>
@@ -443,320 +355,211 @@ function render() {
                 </td>
             </tr>`).join('');
     });
-    container.innerHTML = `
-    <div class="table-wrapper">
-      <table>
-        <colgroup>
-          <col class="col-plant"><col class="col-aufgabe"><col class="col-detail">
-          <col class="col-endtime"><col class="col-responsible"><col class="col-status"><col class="col-actions">
-        </colgroup>
-        <thead><tr>
-          <th>Plant</th><th>Aufgabe</th><th>Detail</th>
-          <th>End Time</th><th>Responsible</th><th>Status</th><th></th>
-        </tr></thead>
+    container.innerHTML=`
+    <div class="table-wrapper"><table>
+        <colgroup><col class="col-plant"><col class="col-aufgabe"><col class="col-detail">
+        <col class="col-endtime"><col class="col-responsible"><col class="col-status"><col class="col-actions"></colgroup>
+        <thead><tr><th>Plant</th><th>Aufgabe</th><th>Detail</th>
+        <th>End Time</th><th>Responsible</th><th>Status</th><th></th></tr></thead>
         <tbody>${bodyRows}</tbody>
-      </table>
-    </div>`;
+    </table></div>`;
 }
 
-function toggleGroup(key) {
-    const rows = document.querySelectorAll(`.task-row[data-grp="${key}"]`);
-    const chv  = document.getElementById('chv-' + key);
-    const hide = chv.textContent === '▼';
-    chv.textContent = hide ? '▶' : '▼';
-    rows.forEach(r => r.style.display = hide ? 'none' : '');
+function toggleGroup(key){
+    const rows=document.querySelectorAll(`.task-row[data-grp="${key}"]`);
+    const chv=document.getElementById('chv-'+key);
+    const hide=chv.textContent==='▼';
+    chv.textContent=hide?'▶':'▼';
+    rows.forEach(r=>r.style.display=hide?'none':'');
 }
 
-// ── Modal ──
-function openModal(id) {
-    editingId = id ?? null;
-    document.getElementById('modal-title').textContent = editingId ? 'Element bearbeiten' : 'Neues Element';
-    const t = editingId ? items.find(x => x.id === editingId) : {};
-    fillDatalist('dl-project', items.map(x => x.project));
-    fillDatalist('dl-plant',   items.map(x => x.plant));
-    document.getElementById('f-project').value     = t.project     || '';
-    document.getElementById('f-plant').value       = t.plant       || '';
-    document.getElementById('f-title').value       = t.title       || '';
-    document.getElementById('f-detail').value      = t.detail      || '';
-    document.getElementById('f-endtime').value     = t.endTime     || '';
-    document.getElementById('f-status').value      = t.status      || 'open';
-    document.getElementById('f-responsible').value = t.responsible || '';
+function openModal(id){
+    editingId=id??null;
+    document.getElementById('modal-title').textContent=editingId?'Element bearbeiten':'Neues Element';
+    const t=editingId?items.find(x=>x.id===editingId):{};
+    fillDatalist('dl-project',items.map(x=>x.project));
+    fillDatalist('dl-plant',items.map(x=>x.plant));
+    document.getElementById('f-project').value=t.project||'';
+    document.getElementById('f-plant').value=t.plant||'';
+    document.getElementById('f-title').value=t.title||'';
+    document.getElementById('f-detail').value=t.detail||'';
+    document.getElementById('f-endtime').value=t.endTime||'';
+    document.getElementById('f-status').value=t.status||'open';
+    document.getElementById('f-responsible').value=t.responsible||'';
     document.getElementById('modal').classList.add('show');
     document.getElementById('f-project').focus();
 }
-
-function fillDatalist(id, values) {
-    const uniq = [...new Set(values.map(v => (v||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-    document.getElementById(id).innerHTML = uniq.map(v => `<option value="${esc(v)}">`).join('');
+function fillDatalist(id,values){
+    const uniq=[...new Set(values.map(v=>(v||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    document.getElementById(id).innerHTML=uniq.map(v=>`<option value="${esc(v)}">`).join('');
 }
-function hideModal(){document.getElementById('modal').classList.remove('show'); editingId=null;}
+function hideModal(){document.getElementById('modal').classList.remove('show');editingId=null;}
 function onOverlayClick(e){if(e.target===document.getElementById('modal'))hideModal();}
 
-async function saveItem() {
-    const title   = document.getElementById('f-title').value.trim();
-    const project = document.getElementById('f-project').value.trim();
-    if (!title)   { showMsg('Bitte Aufgabe ausfüllen.','info'); return; }
-    if (!project) { showMsg('Bitte Project Name ausfüllen.','info'); return; }
-
-    const data = {
-        title, project,
-        plant:       document.getElementById('f-plant').value.trim(),
-        detail:      document.getElementById('f-detail').value.trim(),
-        endTime:     document.getElementById('f-endtime').value,
-        status:      document.getElementById('f-status').value,
-        responsible: document.getElementById('f-responsible').value.trim()
-    };
-
-    const btn = document.getElementById('btn-save');
-    btn.disabled = true;
-    showLoading(true, editingId ? 'Wird gespeichert…' : 'Wird erstellt…');
-
-    try {
-        const digest = await getDigest();
-        const body   = JSON.stringify(localToSP(data));
-
-        if (editingId) {
-            const r = await fetch(`${API_BASE}(${editingId})`, {
-                method: 'POST',
-                headers: {
-                    'Accept':         'application/json;odata=nometadata',
-                    'Content-Type':   'application/json;odata=nometadata',
-                    'X-RequestDigest': digest,
-                    'X-HTTP-Method':  'MERGE',
-                    'IF-MATCH':       '*'
-                },
-                credentials: 'include',
-                body
-            });
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            showMsg('✔ Element aktualisiert.', 'success');
-        } else {
-            const r = await fetch(API_BASE, {
-                method: 'POST',
-                headers: {
-                    'Accept':         'application/json;odata=nometadata',
-                    'Content-Type':   'application/json;odata=nometadata',
-                    'X-RequestDigest': digest
-                },
-                credentials: 'include',
-                body
-            });
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            showMsg('✔ Element hinzugefügt.', 'success');
-        }
-        hideModal();
-        await load();
-        if (document.getElementById('gantt-overlay').classList.contains('show')) renderGantt();
-    } catch(e) {
-        showMsg('Fehler beim Speichern: ' + e.message, 'error');
-    } finally {
-        btn.disabled = false;
-        showLoading(false);
+function saveItem(){
+    const title=document.getElementById('f-title').value.trim();
+    const project=document.getElementById('f-project').value.trim();
+    if(!title){showMsg('Bitte Aufgabe ausfüllen.','info');return;}
+    if(!project){showMsg('Bitte Project Name ausfüllen.','info');return;}
+    const data={project,title,
+        plant:document.getElementById('f-plant').value.trim(),
+        detail:document.getElementById('f-detail').value.trim(),
+        endTime:document.getElementById('f-endtime').value,
+        status:document.getElementById('f-status').value,
+        responsible:document.getElementById('f-responsible').value.trim()};
+    if(editingId){
+        const i=items.findIndex(x=>x.id===editingId);
+        items[i]={...items[i],...data};
+        showMsg('✔ Element aktualisiert.','success');
+    } else {
+        items.push({id:nextId(),...data});
+        showMsg('✔ Element hinzugefügt.','success');
     }
+    save();hideModal();refreshFilters();render();
+    if(document.getElementById('gantt-overlay').classList.contains('show'))renderGantt();
 }
 
-async function confirmDelete(id) {
-    const t = items.find(x => x.id === id);
-    if (!confirm(`„${t?.title || 'Element'}" wirklich löschen?`)) return;
-    showLoading(true, 'Wird gelöscht…');
-    try {
-        const digest = await getDigest();
-        const r = await fetch(`${API_BASE}(${id})`, {
-            method: 'POST',
-            headers: {
-                'X-RequestDigest': digest,
-                'X-HTTP-Method':   'DELETE',
-                'IF-MATCH':        '*'
-            },
-            credentials: 'include'
-        });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        showMsg('Element gelöscht.', 'success');
-        await load();
-    } catch(e) {
-        showMsg('Fehler beim Löschen: ' + e.message, 'error');
-    } finally {
-        showLoading(false);
-    }
+function confirmDelete(id){
+    const t=items.find(x=>x.id===id);
+    if(!confirm(`„${t?.title||'Element'}" wirklich löschen?`))return;
+    items=items.filter(x=>x.id!==id);
+    save();refreshFilters();render();
+    showMsg('Element gelöscht.','success');
 }
 
-// ── Export CSV ──
-function exportCSV() {
-    const cols = ['project','plant','title','detail','endTime','status','responsible'];
-    const head = ['Project Name','Plant','Aufgabe','Detail','End Time','Status','Responsible'];
-    const cell = (col, val) => {
-        let v = String(val ?? '');
-        if (col === 'detail') v = v.replace(/\r?\n/g, ' | ');
-        return '"' + v.replace(/"/g, '""') + '"';
+function exportJSON(){
+    const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+    download(blob,'camera-projects-backup.json');
+    showMsg('Backup heruntergeladen.','success');
+}
+function importFile(e){
+    const file=e.target.files[0];if(!file)return;
+    const isCSV=/\.(csv|txt)$/i.test(file.name);
+    const r=new FileReader();
+    r.onload=()=>{
+        try{
+            const data=isCSV?parseCSV(r.result):JSON.parse(r.result);
+            if(!Array.isArray(data))throw new Error('Ungültiges Format');
+            items=data.map((d,i)=>({id:d.id??i+1,...d}));
+            save();refreshFilters();render();
+            showMsg(`✔ ${items.length} Einträge importiert.`,'success');
+        }catch(err){showMsg('Import-Fehler: '+err.message,'info');}
     };
-    const rows = items.map(t => cols.map(c => cell(c, t[c])).join(';'));
-    const csv  = '﻿' + [head.map(h => '"'+h+'"').join(';'), ...rows].join('\r\n');
-    const url  = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
-    const a    = document.createElement('a');
-    a.href = url; a.download = 'camera-projects.csv'; a.click();
-    URL.revokeObjectURL(url);
-    showMsg('CSV heruntergeladen.', 'success');
+    r.readAsText(file);e.target.value='';
+}
+function mapHeader(h){
+    const k=h.toLowerCase().replace(/\s|_/g,'');
+    if(/project/.test(k))return'project';if(/plant|werk/.test(k))return'plant';
+    if(/aufgabe|task|title|titel/.test(k))return'title';if(/detail|beschreib/.test(k))return'detail';
+    if(/end.?time|enddat|fällig|due/.test(k))return'endTime';if(/status/.test(k))return'status';
+    if(/respons|verantwort|owner/.test(k))return'responsible';return null;
+}
+function parseCSV(text){
+    text=text.replace(/^﻿/,'');
+    const rows=[];let row=[],field='',inQuotes=false;
+    for(let i=0;i<text.length;i++){
+        const c=text[i],n=text[i+1];
+        if(inQuotes){if(c==='"'&&n==='"'){field+='"';i++;}else if(c==='"'){inQuotes=false;}else{field+=c;}}
+        else{if(c==='"'){inQuotes=true;}else if(c===','||c===';'){row.push(field);field='';}
+        else if(c==='\r'){}else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}else{field+=c;}}
+    }
+    if(field.length||row.length){row.push(field);rows.push(row);}
+    if(rows.length<2)throw new Error('Keine Datenzeilen gefunden');
+    const headers=rows[0].map(mapHeader);
+    return rows.slice(1).filter(r=>r.some(v=>v.trim()!=='')).map(r=>{
+        const obj={};headers.forEach((f,idx)=>{if(f)obj[f]=(r[idx]||'').trim();});
+        if(obj.endTime){const d=new Date(obj.endTime);if(!isNaN(d))obj.endTime=d.toISOString().substring(0,10);}
+        return obj;
+    }).filter(o=>o.title||o.project);
+}
+function exportCSV(){
+    const cols=['project','plant','title','detail','endTime','status','responsible'];
+    const head=['Project Name','Plant','Aufgabe','Detail','End Time','Status','Responsible'];
+    const cell=(col,val)=>{let v=String(val??'');if(col==='detail')v=v.replace(/\r?\n/g,' | ');return'"'+v.replace(/"/g,'""')+'"';};
+    const rows=items.map(t=>cols.map(c=>cell(c,t[c])).join(';'));
+    const csv='﻿'+[head.map(h=>'"'+h+'"').join(';'),...rows].join('\r\n');
+    download(new Blob([csv],{type:'text/csv;charset=utf-8;'}),'camera-projects.csv');
+    showMsg('CSV heruntergeladen.','success');
+}
+function download(blob,name){
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');
+    a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
 }
 
-// ── Init ──
-load();
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        if (document.getElementById('gantt-overlay').classList.contains('show')) hideGantt();
+load();refreshFilters();render();
+document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+        if(document.getElementById('gantt-overlay').classList.contains('show'))hideGantt();
         else hideModal();
     }
 });
 
-// ══════════════════════════════════════════════════
-//  GANTT CHART
-// ══════════════════════════════════════════════════
-function showGantt() { renderGantt(); document.getElementById('gantt-overlay').classList.add('show'); document.body.style.overflow='hidden'; }
-function hideGantt() { document.getElementById('gantt-overlay').classList.remove('show'); document.body.style.overflow=''; }
-
-function ganttBarClass(status) {
-    const s = (status||'').toLowerCase();
-    if (s==='process') return 'status-process';
-    if (s==='open')    return 'status-open';
-    if (s==='done')    return 'status-done';
-    if (s==='urgent')  return 'status-urgent';
-    return 'status-other';
+// ── GANTT ──
+function showGantt(){renderGantt();document.getElementById('gantt-overlay').classList.add('show');document.body.style.overflow='hidden';}
+function hideGantt(){document.getElementById('gantt-overlay').classList.remove('show');document.body.style.overflow='';}
+function ganttBarClass(s){s=(s||'').toLowerCase();if(s==='process')return'status-process';if(s==='open')return'status-open';if(s==='done')return'status-done';if(s==='urgent')return'status-urgent';return'status-other';}
+function mondayOf(date){const d=new Date(date);d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d;}
+function isoWeek(date){const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const day=(d.getUTCDay()+6)%7;d.setUTCDate(d.getUTCDate()-day+3);const ft=new Date(Date.UTC(d.getUTCFullYear(),0,4));ft.setUTCDate(ft.getUTCDate()-(ft.getUTCDay()+6)%7+3);return 1+Math.round((d-ft)/(7*86400000));}
+function toggleGanttStatus(status){
+    if(ganttHiddenStatuses.has(status))ganttHiddenStatuses.delete(status);else ganttHiddenStatuses.add(status);
+    document.querySelectorAll('.gantt-task-row').forEach(tr=>tr.style.display=ganttHiddenStatuses.has(tr.dataset.status||'')?'none':'');
+    document.querySelectorAll('.gantt-legend-item[data-status]').forEach(el=>el.classList.toggle('inactive',ganttHiddenStatuses.has(el.dataset.status)));
 }
-
-function mondayOf(date) {
-    const d = new Date(date); d.setHours(0,0,0,0);
-    d.setDate(d.getDate() - (d.getDay()+6)%7);
-    return d;
+function exportGanttPDF(){
+    const style=document.createElement('style');style.id='print-fix';
+    style.textContent='.gantt-table th,.gantt-table td{position:static!important}';
+    document.head.appendChild(style);window.print();
+    requestAnimationFrame(()=>document.getElementById('print-fix')?.remove());
 }
-function isoWeek(date) {
-    const d = new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));
-    const day = (d.getUTCDay()+6)%7;
-    d.setUTCDate(d.getUTCDate()-day+3);
-    const ft = new Date(Date.UTC(d.getUTCFullYear(),0,4));
-    ft.setUTCDate(ft.getUTCDate()-(ft.getUTCDay()+6)%7+3);
-    return 1+Math.round((d-ft)/(7*86400000));
-}
-
-function toggleGanttStatus(status) {
-    if (ganttHiddenStatuses.has(status)) ganttHiddenStatuses.delete(status);
-    else ganttHiddenStatuses.add(status);
-    document.querySelectorAll('.gantt-task-row').forEach(tr => {
-        tr.style.display = ganttHiddenStatuses.has(tr.dataset.status||'') ? 'none' : '';
-    });
-    document.querySelectorAll('.gantt-legend-item[data-status]').forEach(el => {
-        el.classList.toggle('inactive', ganttHiddenStatuses.has(el.dataset.status));
-    });
-}
-
-function renderGantt() {
-    const WEEKS = 52;
-    const today = new Date(); today.setHours(0,0,0,0);
-    const todayMonday = mondayOf(today);
-    const startMonday = new Date(todayMonday);
-    startMonday.setDate(startMonday.getDate()-7);
-
-    const weeks = [];
-    for (let i=0;i<WEEKS;i++) {
-        const mon = new Date(startMonday); mon.setDate(mon.getDate()+i*7);
-        const sun = new Date(mon); sun.setDate(sun.getDate()+6);
-        weeks.push({mon,sun,cw:isoWeek(mon)});
-    }
-
-    const monthSpans=[]; let cur=null,count=0;
-    weeks.forEach(w=>{
-        const lbl=w.mon.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
-        if(lbl===cur)count++; else{if(cur)monthSpans.push({lbl:cur,span:count});cur=lbl;count=1;}
-    });
+function renderGantt(){
+    const WEEKS=52;const today=new Date();today.setHours(0,0,0,0);
+    const startMonday=new Date(mondayOf(today));startMonday.setDate(startMonday.getDate()-7);
+    const weeks=[];
+    for(let i=0;i<WEEKS;i++){const mon=new Date(startMonday);mon.setDate(mon.getDate()+i*7);const sun=new Date(mon);sun.setDate(sun.getDate()+6);weeks.push({mon,sun,cw:isoWeek(mon)});}
+    const monthSpans=[];let cur=null,count=0;
+    weeks.forEach(w=>{const lbl=w.mon.toLocaleDateString('de-DE',{month:'long',year:'numeric'});if(lbl===cur)count++;else{if(cur)monthSpans.push({lbl:cur,span:count});cur=lbl;count=1;}});
     monthSpans.push({lbl:cur,span:count});
-
-    const todayCW=isoWeek(today), todayYr=today.getFullYear();
-    const monthHeaderCells=monthSpans.map(m=>`<th colspan="${m.span}" style="background:#6264a7;color:white;border-right:2px solid #fff">${m.lbl}</th>`).join('');
-    const cwHeaderCells=weeks.map(w=>{
-        const isNow=w.cw===todayCW&&w.mon.getFullYear()===todayYr;
-        return `<th class="${isNow?'today-line':''}" style="font-size:11px;padding:5px 2px">
-            <div style="font-weight:700">CW ${w.cw}</div>
-            <div style="font-size:9px;font-weight:400;opacity:.7;margin-top:1px">${w.mon.getDate()}.${w.mon.getMonth()+1}.</div></th>`;
-    }).join('');
-
-    const groups=new Map();
-    items.forEach(t=>{const k=t.project||'(Kein Projekt)';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(t);});
-
-    const rangeStart=weeks[0].mon.getTime(), rangeEnd=weeks[WEEKS-1].sun.getTime();
+    const todayCW=isoWeek(today),todayYr=today.getFullYear();
+    const monthHdr=monthSpans.map(m=>`<th colspan="${m.span}" style="background:#6264a7;color:white;border-right:2px solid #fff">${m.lbl}</th>`).join('');
+    const cwHdr=weeks.map(w=>{const isNow=w.cw===todayCW&&w.mon.getFullYear()===todayYr;return`<th class="${isNow?'today-line':''}" style="font-size:11px;padding:5px 2px"><div style="font-weight:700">CW ${w.cw}</div><div style="font-size:9px;opacity:.7;margin-top:1px">${w.mon.getDate()}.${w.mon.getMonth()+1}.</div></th>`;}).join('');
+    const groups=new Map();items.forEach(t=>{const k=t.project||'(Kein Projekt)';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(t);});
+    const rangeStart=weeks[0].mon.getTime(),rangeEnd=weeks[WEEKS-1].sun.getTime();
     let bodyRows='';
     groups.forEach((tasks,project)=>{
-        bodyRows+=`<tr class="gantt-project-row"><td class="col-info gantt-project-info">${esc(project)}
-            <span style="background:#6264a7;color:white;border-radius:10px;padding:1px 8px;font-size:12px;margin-left:6px">${tasks.length}</span>
-            </td><td colspan="${WEEKS}"></td></tr>`;
+        bodyRows+=`<tr class="gantt-project-row"><td class="col-info gantt-project-info">${esc(project)}<span style="background:#6264a7;color:white;border-radius:10px;padding:1px 8px;font-size:12px;margin-left:6px">${tasks.length}</span></td><td colspan="${WEEKS}"></td></tr>`;
         tasks.forEach(t=>{
-            const hasEnd=t.endTime&&!isNaN(new Date(t.endTime));
-            const endDate=hasEnd?new Date(t.endTime):null;
-            if(endDate)endDate.setHours(0,0,0,0);
+            const hasEnd=t.endTime&&!isNaN(new Date(t.endTime));const endDate=hasEnd?new Date(t.endTime):null;if(endDate)endDate.setHours(0,0,0,0);
             let firstWeek=-1,lastWeek=-1;
             if(endDate&&endDate.getTime()>=rangeStart&&today.getTime()<=rangeEnd){
                 const barStart=today.getTime()<rangeStart?new Date(rangeStart):today;
-                weeks.forEach((w,i)=>{
-                    if(barStart.getTime()<=w.sun.getTime()&&endDate.getTime()>=w.mon.getTime()){
-                        if(firstWeek===-1)firstWeek=i; lastWeek=i;
-                    }
-                });
+                weeks.forEach((w,i)=>{if(barStart.getTime()<=w.sun.getTime()&&endDate.getTime()>=w.mon.getTime()){if(firstWeek===-1)firstWeek=i;lastWeek=i;}});
             }
             const barCls=ganttBarClass(t.status);
-            const tip=`${esc(t.title)}${t.endTime?' — '+esc(t.endTime):''}`;
             const weekCells=weeks.map((w,i)=>{
-                const isNow=w.cw===todayCW&&w.mon.getFullYear()===todayYr;
-                const bg=isNow?'background:#fde8d8':'';
+                const isNow=w.cw===todayCW&&w.mon.getFullYear()===todayYr;const bg=isNow?'background:#fde8d8':'';
                 if(firstWeek>=0&&i>=firstWeek&&i<=lastWeek){
-                    const r=`border-radius:${i===firstWeek?'4px':'0'} ${i===lastWeek?'4px':'0'} ${i===lastWeek?'4px':'0'} ${i===firstWeek?'4px':'0'}`;
-                    return `<td class="week-cell" style="${bg};padding:0"><div class="gantt-bar ${barCls}" title="${tip}" style="position:relative;height:18px;width:100%;${r}"></div></td>`;
+                    const rad=`border-radius:${i===firstWeek?'4px':'0'} ${i===lastWeek?'4px':'0'} ${i===lastWeek?'4px':'0'} ${i===firstWeek?'4px':'0'}`;
+                    return`<td class="week-cell" style="${bg};padding:0"><div class="gantt-bar ${barCls}" title="${esc(t.title)}" style="position:relative;height:18px;width:100%;${rad}"></div></td>`;
                 }
-                return `<td class="week-cell" style="${bg}"></td>`;
+                return`<td class="week-cell" style="${bg}"></td>`;
             }).join('');
             const statusBadge=t.status?`<span class="badge ${statusClass(t.status)}" style="font-size:11px;padding:1px 7px">${esc(t.status)}</span>`:'';
             const rowHide=ganttHiddenStatuses.has(t.status||'')?'style="display:none"':'';
-            bodyRows+=`<tr class="gantt-task-row" data-status="${esc(t.status||'')}" onclick="openModal(${t.id})" ${rowHide}>
-                <td class="col-info">
-                    <div style="font-size:13px;font-weight:500">${esc(t.title)}</div>
-                    <div style="font-size:11px;color:#605e5c;margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">
-                        ${statusBadge}
-                        ${t.responsible?`<span>${esc(t.responsible)}</span>`:''}
-                        ${t.endTime?`<span style="color:#8a8886">🏁 ${fmtDate(t.endTime)}</span>`:''}
-                    </div>
-                </td>${weekCells}</tr>`;
+            bodyRows+=`<tr class="gantt-task-row" data-status="${esc(t.status||'')}" onclick="openModal(${t.id})" ${rowHide}><td class="col-info"><div style="font-size:13px;font-weight:500">${esc(t.title)}</div><div style="font-size:11px;color:#605e5c;margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">${statusBadge}${t.responsible?`<span>${esc(t.responsible)}</span>`:''}${t.endTime?`<span style="color:#8a8886">🏁 ${fmtDate(t.endTime)}</span>`:''}</div></td>${weekCells}</tr>`;
         });
     });
-
     const legendStatuses=[{key:'Process',color:'#6264a7'},{key:'open',color:'#f0a070'},{key:'done',color:'#55a86a'},{key:'Urgent',color:'#d73b02'}];
-    document.getElementById('gantt-legend-bar').innerHTML=`
-        <span style="font-weight:600;font-size:13px;color:#605e5c">Status:</span>
-        ${legendStatuses.map(s=>`<span class="gantt-legend-item${ganttHiddenStatuses.has(s.key)?' inactive':''}" data-status="${s.key}" onclick="toggleGanttStatus('${s.key}')">
-            <span class="gantt-legend-dot" style="background:${s.color}"></span>${s.key}</span>`).join('')}
-        <span style="margin-left:12px;font-size:12px;color:#8a8886">Balken = heute → Endtermin &nbsp;|&nbsp; orange KW = aktuelle Woche</span>`;
-
-    document.getElementById('gantt-content').innerHTML=`
-    <table class="gantt-table">
-        <colgroup><col>${weeks.map(()=>'<col style="width:58px;min-width:58px">').join('')}</colgroup>
-        <thead>
-            <tr><th class="col-info" rowspan="2">Aufgabe</th>${monthHeaderCells}</tr>
-            <tr>${cwHeaderCells}</tr>
-        </thead>
-        <tbody>${bodyRows}</tbody>
-    </table>`;
-
+    document.getElementById('gantt-legend-bar').innerHTML=`<span style="font-weight:600;font-size:13px;color:#605e5c">Status:</span>${legendStatuses.map(s=>`<span class="gantt-legend-item${ganttHiddenStatuses.has(s.key)?' inactive':''}" data-status="${s.key}" onclick="toggleGanttStatus('${s.key}')"><span class="gantt-legend-dot" style="background:${s.color}"></span>${s.key}</span>`).join('')}<span style="margin-left:12px;font-size:12px;color:#8a8886">Balken = heute → Endtermin &nbsp;|&nbsp; orange KW = aktuelle Woche</span>`;
+    document.getElementById('gantt-content').innerHTML=`<table class="gantt-table"><colgroup><col>${weeks.map(()=>'<col style="width:58px;min-width:58px">').join('')}</colgroup><thead><tr><th class="col-info" rowspan="2">Aufgabe</th>${monthHdr}</tr><tr>${cwHdr}</tr></thead><tbody>${bodyRows}</tbody></table>`;
     requestAnimationFrame(()=>{
-        const table=document.querySelector('#gantt-content .gantt-table');
-        if(!table)return;
+        const table=document.querySelector('#gantt-content .gantt-table');if(!table)return;
         const h1=table.querySelector('thead tr:first-child')?.offsetHeight||30;
         table.querySelectorAll('thead tr:last-child th').forEach(th=>th.style.top=h1+'px');
         const headH=table.querySelector('thead').offsetHeight;
         table.querySelectorAll('.gantt-project-row td').forEach(td=>td.style.top=headH+'px');
     });
-    ganttHiddenStatuses.forEach(s=>{
-        document.querySelectorAll(`.gantt-task-row[data-status="${s}"]`).forEach(tr=>tr.style.display='none');
-    });
-    requestAnimationFrame(()=>{
-        const scroll=document.getElementById('gantt-scroll');
-        const todayTh=scroll.querySelector('th.today-line');
-        if(todayTh)scroll.scrollLeft=Math.max(0,todayTh.offsetLeft-280);
-    });
+    ganttHiddenStatuses.forEach(s=>document.querySelectorAll(`.gantt-task-row[data-status="${s}"]`).forEach(tr=>tr.style.display='none'));
+    requestAnimationFrame(()=>{const scroll=document.getElementById('gantt-scroll');const th=scroll.querySelector('th.today-line');if(th)scroll.scrollLeft=Math.max(0,th.offsetLeft-280);});
 }
 </script>
 
