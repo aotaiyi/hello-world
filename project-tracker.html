@@ -137,9 +137,9 @@
         box-shadow: 0 1px 4px rgba(0,0,0,0.1); table-layout: auto; width: max-content; min-width: 100%; }
     .gantt-table th { background: #faf9f8; padding: 8px 4px; font-size: 11px; font-weight: 600;
         color: #605e5c; border-bottom: 2px solid #edebe9; border-right: 1px solid #edebe9;
-        white-space: nowrap; text-align: center; }
+        white-space: nowrap; text-align: center; position: sticky; top: 0; z-index: 5; }
     .gantt-table th.col-info { text-align: left; padding: 8px 14px;
-        vertical-align: middle; position: sticky; left: 0; z-index: 3;
+        vertical-align: middle; position: sticky; left: 0; top: 0; z-index: 7;
         background: #faf9f8; border-right: 2px solid #c8c6c4; white-space: nowrap; }
     .gantt-table td { padding: 7px 4px; border-bottom: 1px solid #f3f2f1; border-right: 1px solid #f3f2f1;
         font-size: 13px; vertical-align: middle; }
@@ -745,6 +745,17 @@ function renderGantt() {
         </thead>
         <tbody>${bodyRows}</tbody>
     </table>`;
+
+    // Pin the 2nd header row right below the 1st, and project bands below the whole header
+    requestAnimationFrame(() => {
+        const table = document.querySelector('#gantt-content .gantt-table');
+        if (!table) return;
+        const row1 = table.querySelector('thead tr:first-child');
+        const h1 = row1 ? row1.offsetHeight : 30;
+        table.querySelectorAll('thead tr:last-child th').forEach(th => { th.style.top = h1 + 'px'; });
+        const headH = table.querySelector('thead').offsetHeight;
+        table.querySelectorAll('.gantt-project-row td').forEach(td => { td.style.top = headH + 'px'; });
+    });
 
     // Scroll so that the current week (2nd column) is visible near the left
     requestAnimationFrame(() => {
